@@ -76,16 +76,41 @@ FUNCTION Get-AppLockerEvents {
             $Events = Get-WinEvent -ComputerName $Computer -FilterHashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"};
         };
 
+        if ($Events) {
 
-        $Events |
-            Foreach-Object {
 
-                $output = $_;
-                $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
-                $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+            $Events |
+                Foreach-Object {
 
-                Return $output;
+                    $output = $_;
+                    $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
+                    $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+
+                    Return $output;
+                };
+        }
+
+        else { # System was not reachable
+
+            if ($Fails) { # -Fails switch was used
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else{ # -Fails switch not used
+                            
+                $output = $null;
+                    $output = [Process]::new();
+                    $output.Computer = $Computer;
+					$output.DateScanned = Get-Date -Format u;
+
+                return $output;
             };
+        };
+         
+        $elapsed = $stopwatch.Elapsed;
+        $total = $total+1;
+            
+        Write-Information -MessageData "System $total `t $ThisComputer `t Time Elapsed: $elapsed" -InformationAction Continue;
+
     };
 
     END{
