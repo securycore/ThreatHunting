@@ -98,9 +98,9 @@ FUNCTION Get-AppLockerEvents {
             else{ # -Fails switch not used
                             
                 $output = $null;
-                    $output = [Process]::new();
-                    $output.Computer = $Computer;
-					$output.DateScanned = Get-Date -Format u;
+                $output = [PSCustomObject]@{};
+                $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
+                $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
 
                 return $output;
             };
