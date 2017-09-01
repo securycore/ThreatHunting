@@ -86,7 +86,9 @@ FUNCTION Get-Shares {
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
 
         $Shares = $null;
-        $Shares = Get-WmiObject -class Win32_LogicalShareSecuritySetting -ComputerName $Computer -ErrorAction SilentlyContinue;
+        $Shares = Get-WmiObject -class Win32_share -Filter "type=0" -ComputerName $Computer -ErrorAction SilentlyContinue;
+
+        
 
         if ($Shares) {
             $OutputArray = $null;
@@ -96,7 +98,9 @@ FUNCTION Get-Shares {
 
                 $ShareName = $Share.Name;
 
-                $DACLs = $Share.GetSecurityDescriptor().Descriptor.DACL;
+                $ShareSettings = Get-WmiObject -class Win32_LogicalShareSecuritySetting  -Filter "Name='$ShareName'" -ComputerName $Computer -ErrorAction SilentlyContinue;
+
+                $DACLs = $ShareSettings.GetSecurityDescriptor().Descriptor.DACL;
 
                 foreach ($DACL in $DACLs) {
 
@@ -127,7 +131,7 @@ FUNCTION Get-Shares {
 
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
-                    $output.ComputerName = $ShareSecurity.PSComputerName;
+                    $output.ComputerName = $Share.PSComputerName;
                     $output.Name = $Share.Name;
                     $output.Path = $Share.Path;
                     $output.Description = $Share.Description;
