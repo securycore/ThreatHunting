@@ -26,7 +26,7 @@ FUNCTION Get-Processes {
         Get-ADComputer -filter * | Select -ExpandProperty Name | Get-Processes
 
     .Notes 
-        Updated: 2017-08-01
+        Updated: 2017-09-05
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ FUNCTION Get-Processes {
 
         PARAM(
     	    [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-            $Computer,
+            $Computer = $env:COMPUTERNAME,
             [Parameter()]
             [switch]$Services,
             [Parameter()]
@@ -63,6 +63,44 @@ FUNCTION Get-Processes {
             $stopwatch.Start();
 
             $total = 0;
+
+            class Process
+            {
+                [String] $Computer
+                [String] $Mode
+                [String] $BasePriority
+                [String] $CPU
+                [String] $CommandLine
+                [String] $Company
+                [String] $Description
+                [String] $EnableRaisingEvents
+                [String] $FileVersion
+                [String] $Handle
+                [Int32] $HandleCount
+                [Int32] $Id
+                [String] $MainModule
+                [String] $MainWindowHandle
+                [String] $MainWindowTitle
+                [Int32] $ModuleCount
+                [Datetime] $DateScanned
+                [String] $DisplayName
+                [String] $Path
+                [String] $PriorityBoostEnabled
+                [String] $PriorityClass
+                [String] $PrivilegedProcessorTime
+                [String] $ProcessName
+                [String] $ProcessorAffinity
+                [String] $Product
+                [String] $ProductVersion
+                [String] $Responding
+                [Int32] $SessionId
+                [String] $StartTime
+                [Int32] $Threads
+                [String] $TotalProcessorTime
+                [String] $UserName
+                [String] $Services
+                [String] $DLLs
+            }
 	    }
 
         PROCESS{
@@ -131,41 +169,44 @@ FUNCTION Get-Processes {
                     };
 
                     $output = $null;
-                    $output = [PSCustomObject]@{
+                    $output = [Process]::new();
 
-                        Computer = $Computer;
-						Mode = $Mode;
-                        BasePriority = $_.BasePriority;
-                        CPU = $_.CPU;
-                        CommandLine = $CommandLine;
-                        Company = $_.Company;
-                        Description = $_.Description;
-                        EnableRaisingEvents = $_.EnableRaisingEvents;
-                        FileVersion = $_.FileVersion;
-                        Handle = $_.Handle;
-                        HandleCount = $_.HandleCount;
-                        Id = $_.Id;
-                        MainModule = if ($_.MainModule){ if ($_.MainModule.GetType().Name -eq "String") {$_.MainModule.Replace('System.Diagnostics.ProcessModule (', '').Replace(')', '');}else {($_.MainModule)};};
-                        MainWindowHandle = $_.MainWindowHandle;
-                        MainWindowTitle = $_.MainWindowTitle;
-                        ModuleCount = @($_.Modules).Count;
-                        DisplayName = $_.Name;
-                        Path = $_.Path;
-                        PriorityBoostEnabled = $_.PriorityBoostEnabled;
-                        PriorityClass = $_.PriorityClass;
-                        PrivilegedProcessorTime = $_.PrivilegedProcessorTime;
-                        ProcessName = $_.ProcessName;
-                        ProcessorAffinity = $_.ProcessorAffinity;
-                        Product = $_.Product;
-                        ProductVersion = $_.ProductVersion;
-                        Responding = $_.Responding;
-                        SessionId = $_.SessionId;
-                        StartTime = $_.StartTime;
-                        Threads = @($_.Threads).Count;
-                        TotalProcessorTime = $_.TotalProcessorTime;
-                        UserName = if ($_.UserName) {$_.UserName} elseif ($ProcessOwner.User) {$ProcessOwner.Domain+"\"+$ProcessOwner.User;};
-                        Services = if ($ThisServices) {$ThisServices.PathName -Join "; ";};
-                        DLLs = if ($DLLs -AND $_.Modules) {$_.Modules.Replace('System.Diagnostics.ProcessModule (', '').Replace(')', '') -join "; ";};
+                        $output.Computer = $Computer;
+						$output.Mode = $Mode;
+                        $output.BasePriority = $_.BasePriority;
+                        $output.CPU = $_.CPU;
+                        $output.CommandLine = $CommandLine;
+                        $output.Company = $_.Company;
+                        $output.Description = $_.Description;
+                        $output.EnableRaisingEvents = $_.EnableRaisingEvents;
+                        $output.FileVersion = $_.FileVersion;
+                        $output.Handle = $_.Handle;
+                        $output.HandleCount = $_.HandleCount;
+                        $output.Id = $_.Id;
+                        $output.MainModule = $_.MainModule;
+                        $output.MainModule = $output.MainModule.Replace('System.Diagnostics.ProcessModule (', '').Replace(')', '');
+                        $output.MainWindowHandle = $_.MainWindowHandle;
+                        $output.MainWindowTitle = $_.MainWindowTitle;
+                        $output.ModuleCount = @($_.Modules).Count;
+                        $output.DisplayName = $_.Name;
+                        $output.Path = $_.Path;
+                        $output.PriorityBoostEnabled = $_.PriorityBoostEnabled;
+                        $output.PriorityClass = $_.PriorityClass;
+                        $output.PrivilegedProcessorTime = $_.PrivilegedProcessorTime;
+                        $output.ProcessName = $_.ProcessName;
+                        $output.ProcessorAffinity = $_.ProcessorAffinity;
+                        $output.Product = $_.Product;
+                        $output.ProductVersion = $_.ProductVersion;
+                        $output.Responding = $_.Responding;
+                        $output.DateScanned = Get-Date -Format u;
+                        $output.SessionId = $_.SessionId;
+                        $output.StartTime = $_.StartTime;
+                        $output.Threads = @($_.Threads).Count;
+                        $output.TotalProcessorTime = $_.TotalProcessorTime;
+                        $output.UserName = if ($_.UserName) {$_.UserName} elseif ($ProcessOwner.User) {$ProcessOwner.Domain+"\"+$ProcessOwner.User;};
+                        $output.Services = if ($ThisServices) {$ThisServices.PathName -Join "; ";};
+                        $output.DLLs = if ($DLLs -AND $_.Modules) {$_.Modules -join "; ";};
+                        $output.DLLs = $output.DLLs.Replace('System.Diagnostics.ProcessModule (', '').Replace(')', '')
 						
 						<#
                         UserName = if ($ProcessOwner.User) {$ProcessOwner.Domain+"\"+$ProcessOwner.User;};
@@ -190,7 +231,6 @@ FUNCTION Get-Processes {
                         WorkingSet = $_.WorkingSet;
                         WorkingSet64 = $_.WorkingSet64;
                         #>
-                    };
                 
                     return $output; 
                 };#end of each object processed for this system
@@ -204,41 +244,9 @@ FUNCTION Get-Processes {
                 else{ # -Fails switch not used
                             
                     $output = $null;
-                    $output = [PSCustomObject]@{
-                        Computer = $Computer;
-						Mode = "";
-						BasePriority = "";
-                        CPU = "";
-                        CommandLine = "";
-                        Company = "";
-                        Description = "";
-                        EnableRaisingEvents = "";
-                        FileVersion = "";
-                        Handle = "";
-                        HandleCount = "";
-                        Id = "";
-                        MainModule = "";
-                        MainWindowHandle = "";
-                        MainWindowTitle = "";
-                        ModuleCount = "";
-                        DisplayName = "";
-                        Path = "";
-                        PriorityBoostEnabled = "";
-                        PriorityClass = "";
-                        PrivilegedProcessorTime = "";
-                        ProcessName = "";
-                        ProcessorAffinity = "";
-                        Product = "";
-                        ProductVersion = "";
-                        Responding = "";
-                        SessionId = "";
-                        StartTime = "";
-                        Threads = "";
-                        TotalProcessorTime = "";
-                        UserName = "";
-                        Services = "";
-                        DLLs = "";
-                    };
+                        $output = [Process]::new();
+                        $output.Computer = $Computer;
+					    $output.DateScanned = Get-Date -Format u;
 
                     return $output;
                 };
