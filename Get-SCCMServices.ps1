@@ -25,7 +25,7 @@ FUNCTION Get-SCCMServices {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMServices
 
 .Notes 
-    Updated: 2017-07-24
+    Updated: 2017-9-05
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Get-SCCMServices {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -62,6 +62,34 @@ FUNCTION Get-SCCMServices {
         $stopwatch.Start();
 
         $total = 0;
+
+        class Service {
+			[String] $Computer
+			[Datetime] $DateScanned
+			[String] $ResourceNames
+			[String] $AcceptPause
+			[String] $AcceptStop
+			[String] $Caption
+			[String] $CheckPoint
+			[String] $Description
+			[String] $DesktopInteract
+			[String] $DisplayName
+			[String] $ErrorControl
+			[String] $ExitCode
+			[String] $InstallDate
+			[String] $ServiceName
+			[String] $PathName
+			[String] $ProcessId
+			[String] $ServiceSpecificExitCode
+			[String] $ServiceType
+			[String] $Started
+			[String] $StartMode
+			[String] $StartName
+			[String] $State
+			[String] $Status
+			[String] $WaitHint
+			[String] $Timestamp
+		};
 	};
 
     PROCESS{        
@@ -77,52 +105,41 @@ FUNCTION Get-SCCMServices {
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
         };
 
-        $output = [PSCustomObject]@{
-            Name = $ThisComputer
-            ResourceNames = ""
-            AcceptPause = ""
-            AcceptStop = ""
-            Caption = ""
-            CheckPoint = ""
-            Description = ""
-            DesktopInteract = ""
-            DisplayName = ""
-            ErrorControl = ""
-            ExitCode = ""
-            InstallDate = ""
-            ServiceName = ""
-            PathName = ""
-            ProcessId = ""
-            ServiceSpecificExitCode = ""
-            ServiceType = ""
-            Started = ""
-            StartMode = ""
-            StartName = ""
-            State = ""
-            Status = ""
-            WaitHint = ""
-            Timestamp = ""
-        };
-
         if ($CIM){
 
+            $SMS_R_System = $null;
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_SERVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select AcceptPause, AcceptStop, Caption, CheckPoint, Description, DesktopInteract, DisplayName, ErrorControl, ExitCode, InstallDate, Name, PathName, ProcessId, ServiceSpecificExitCode, ServiceType, Started, StartMode, StartName, State, Status, WaitHint, Timestamp from SMS_G_System_SERVICE where ResourceID='$ResourceID'";
+            
+            if ($SMS_R_System) {
+            
+                $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_SERVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select AcceptPause, AcceptStop, Caption, CheckPoint, Description, DesktopInteract, DisplayName, ErrorControl, ExitCode, InstallDate, Name, PathName, ProcessId, ServiceSpecificExitCode, ServiceType, Started, StartMode, StartName, State, Status, WaitHint, Timestamp from SMS_G_System_SERVICE where ResourceID='$ResourceID'";
+            };
         }
         else{
-
+            
+            $SMS_R_System = $null;
             $SMS_R_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_SERVICE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select AcceptPause, AcceptStop, Caption, CheckPoint, Description, DesktopInteract, DisplayName, ErrorControl, ExitCode, InstallDate, Name, PathName, ProcessId, ServiceSpecificExitCode, ServiceType, Started, StartMode, StartName, State, Status, WaitHint, Timestamp from SMS_G_System_SERVICE where ResourceID='$ResourceID'";
+            
+            if ($SMS_R_System) {
+            
+                $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_SERVICE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select AcceptPause, AcceptStop, Caption, CheckPoint, Description, DesktopInteract, DisplayName, ErrorControl, ExitCode, InstallDate, Name, PathName, ProcessId, ServiceSpecificExitCode, ServiceType, Started, StartMode, StartName, State, Status, WaitHint, Timestamp from SMS_G_System_SERVICE where ResourceID='$ResourceID'";
+            };
         };
 
         if ($SMS_G_System_SERVICE){
                 
             $SMS_G_System_SERVICE | ForEach-Object {
                 
-                $output.ResourceNames = $SMS_R_System.ResourceNames[0]
-
+				
+				$output = $null;
+				$output = [Service]::new();
+				
+				$output.Computer = $ThisComputer;
+				$output.DateScanned = Get-Date -Format u;
+                
+				$output.ResourceNames = $SMS_R_System.ResourceNames[0];
                 $output.AcceptPause = $_.AcceptPause;
                 $output.AcceptStop = $_.AcceptStop;
                 $output.Caption = $_.Caption;
@@ -144,17 +161,19 @@ FUNCTION Get-SCCMServices {
                 $output.State = $_.State;
                 $output.Status = $_.Status;
                 $output.WaitHint = $_.WaitHint;
-                    
                 $output.Timestamp = $_.Timestamp;
                     
                 return $output;
-                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
             };
         }
         else{
-
+			
+			$output = $null;
+			$output = [Service]::new();
+			$output.Computer = $Computer;
+			$output.DateScanned = Get-Date -Format u;
+			
             return $output;
-            $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
         };
 
         $elapsed = $stopwatch.Elapsed;
