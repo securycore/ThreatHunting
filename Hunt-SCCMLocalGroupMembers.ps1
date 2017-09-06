@@ -63,7 +63,7 @@ FUNCTION Hunt-SCCMLocalGroupMembers {
 
         $total = 0;
 		
-		class Autostart {
+		class LocalGroup {
             [String] $Computer
             [DateTime] $DateScanned
             
@@ -119,13 +119,12 @@ FUNCTION Hunt-SCCMLocalGroupMembers {
             $SMS_G_System_LocalGroupMembers | ForEach-Object {
                 
 				$output = $null;
-				$output = [Autostart]::new();
+				$output = [LocalGroup]::new();
    
                 $output.Computer = $ThisComputer;
 				$output.DateScanned = Get-Date -Format u;
 				
 				$output.ResourceNames = $SMS_R_System.ResourceNames[0];
-
                 $output.Account = $_.Account;
                 $output.Category = $_.Category;
                 $output.Domain = $_.Domain;
@@ -141,7 +140,7 @@ FUNCTION Hunt-SCCMLocalGroupMembers {
         else {
 
             $output = $null;
-			$output = [Autostart]::new();
+			$output = [LocalGroup]::new();
 
 			$output.Computer = $Computer;
 			$output.DateScanned = Get-Date -Format u;
