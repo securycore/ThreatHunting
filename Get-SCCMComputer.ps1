@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMComputer {
+FUNCTION Hunt-SCCMComputer {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMComputer {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMComputer 
-    Get-SCCMComputer SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMComputer
-    Get-SCCMComputer $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMComputer
+    Hunt-SCCMComputer 
+    Hunt-SCCMComputer SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMComputer
+    Hunt-SCCMComputer $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMComputer
 
 .Notes 
     Updated: 2017-07-26

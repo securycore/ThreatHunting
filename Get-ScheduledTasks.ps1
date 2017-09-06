@@ -1,4 +1,4 @@
-FUNCTION Get-ScheduledTasks {
+FUNCTION Hunt-ScheduledTasks {
     <#
     .Synopsis 
         Gets the scheduled tasks on a given system.
@@ -13,10 +13,10 @@ FUNCTION Get-ScheduledTasks {
         Provide a path to save failed systems to.
 
     .Example 
-        Get-ScheduledTasks 
-        Get-ScheduledTasks SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Get-ScheduledTasks
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-ScheduledTasks
+        Hunt-ScheduledTasks 
+        Hunt-ScheduledTasks SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-ScheduledTasks
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ScheduledTasks
 
     .Notes 
         Updated: 2017-08-31

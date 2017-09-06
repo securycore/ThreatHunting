@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMInstalledSoftware {
+FUNCTION Hunt-SCCMInstalledSoftware {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMInstalledSoftware {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMInstalledSoftware 
-    Get-SCCMInstalledSoftware SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMInstalledSoftware
-    Get-SCCMInstalledSoftware $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMInstalledSoftware
+    Hunt-SCCMInstalledSoftware 
+    Hunt-SCCMInstalledSoftware SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMInstalledSoftware
+    Hunt-SCCMInstalledSoftware $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMInstalledSoftware
 
 .Notes 
     Updated: 2017-07-25

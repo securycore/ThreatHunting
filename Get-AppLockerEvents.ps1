@@ -1,4 +1,4 @@
-FUNCTION Get-AppLockerEvents {
+FUNCTION Hunt-AppLockerEvents {
     <#
     .Synopsis 
         Gets AppLocker Events 8002, 8003, and 8004 from a given system.
@@ -16,11 +16,11 @@ FUNCTION Get-AppLockerEvents {
         Identify the destination host is a Windows Event Collector. This changes where to pull events from (ForwardedEvents).
 
     .Example 
-        Get-AppLockerEvents
-        Get-AppLockerEvents SomeHostName.domain.com
-        Get-AppLockerEvents | Get-WinEventXMLData
-        Get-Content C:\hosts.csv | Get-AppLockerEvents
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-AppLockerEvents
+        Hunt-AppLockerEvents
+        Hunt-AppLockerEvents SomeHostName.domain.com
+        Hunt-AppLockerEvents | Get-WinEventXMLData
+        Get-Content C:\hosts.csv | Hunt-AppLockerEvents
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-AppLockerEvents
 
     .Notes
         To extract XML data, use another script like Get-WinEventXMLData

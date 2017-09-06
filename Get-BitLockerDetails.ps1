@@ -1,4 +1,4 @@
-FUNCTION Get-BitLockerDetails {
+FUNCTION Hunt-BitLockerDetails {
     <#
     .Synopsis 
         Gets the current BitLocker details of a given system.
@@ -13,11 +13,11 @@ FUNCTION Get-BitLockerDetails {
         Provide a path to save failed systems to.
 
     .Example 
-        Get-BitlockerDetails
-        '<COMPUTERNAME>','<COMPUTERNAME>','<COMPUTERNAME>' | Get-BitlockerDetails 
-        Get-BitlockerDetails SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Get-BitlockerDetails
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-BitlockerDetails
+        Hunt-BitLockerDetails
+        '<COMPUTERNAME>','<COMPUTERNAME>','<COMPUTERNAME>' | Hunt-BitLockerDetails 
+        Hunt-BitLockerDetails SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-BitLockerDetails
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-BitLockerDetails
 
     .Notes 
         Updated: 2017-08-31

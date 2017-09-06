@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMLogicalDisks {
+FUNCTION Hunt-SCCMLogicalDisks {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMLogicalDisks {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMLogicalDisks 
-    Get-SCCMLogicalDisks SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMLogicalDisks
-    Get-SCCMLogicalDisks $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMLogicalDisks
+    Hunt-SCCMLogicalDisks 
+    Hunt-SCCMLogicalDisks SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMLogicalDisks
+    Hunt-SCCMLogicalDisks $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMLogicalDisks
 
 .Notes 
     Updated: 2017-07-25

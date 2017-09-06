@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMUSBDevices {
+FUNCTION Hunt-SCCMUSBDevices {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.

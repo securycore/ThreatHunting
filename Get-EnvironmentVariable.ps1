@@ -1,4 +1,4 @@
-Function Get-EnvironmentVariable() {
+Function Hunt-EnvironmentVariable() {
     <#
     .Synopsis 
         Retreives the values of a specified environment variable from one or more systems.
@@ -10,7 +10,7 @@ Function Get-EnvironmentVariable() {
         Computer can be a single hostname, FQDN, or IP address.
     
     .Example 
-        get-content .\hosts.txt | Get-EnvironmentVariable $env:computername -Variable PATH | export-csv envVars.csv -NoTypeInformation
+        get-content .\hosts.txt | Hunt-EnvironmentVariable $env:computername -Variable PATH | export-csv envVars.csv -NoTypeInformation
     
      .Notes 
         Updated: 2017-08-27

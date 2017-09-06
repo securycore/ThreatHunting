@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMAutostarts {
+FUNCTION Hunt-SCCMAutostarts {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMAutostarts {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMAutostarts 
-    Get-SCCMAutostarts SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMAutostarts
-    Get-SCCMAutostarts $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMAutostarts
+    Hunt-SCCMAutostarts 
+    Hunt-SCCMAutostarts SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMAutostarts
+    Hunt-SCCMAutostarts $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMAutostarts
 
 .Notes 
     Updated: 2017-09-06

@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMBrowserHelperObjects {
+FUNCTION Hunt-SCCMBrowserHelperObjects {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMBrowserHelperObjects {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMBrowserHelperObjects 
-    Get-SCCMBrowserHelperObjects SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMBrowserHelperObjects
-    Get-SCCMBrowserHelperObjects $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMBrowserHelperObjects
+    Hunt-SCCMBrowserHelperObjects 
+    Hunt-SCCMBrowserHelperObjects SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMBrowserHelperObjects
+    Hunt-SCCMBrowserHelperObjects $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMBrowserHelperObjects
 
 .Notes 
     Updated: 2017-07-25

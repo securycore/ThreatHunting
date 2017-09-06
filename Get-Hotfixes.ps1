@@ -1,4 +1,4 @@
-FUNCTION Get-Hotfixes {
+FUNCTION Hunt-Hotfixes {
 <#
 .Synopsis 
     Gets the hotfixes applied to a given system.
@@ -10,11 +10,11 @@ FUNCTION Get-Hotfixes {
     Computer can be a single hostname, FQDN, or IP address.
 
 .Example 
-    Get-Hotfixes 
-    Get-Hotfixes SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-Hotfixes
-    Get-Hotfixes $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-Hotfixes
+    Hunt-Hotfixes 
+    Hunt-Hotfixes SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-Hotfixes
+    Hunt-Hotfixes $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Hotfixes
 
 .Notes 
     Updated: 2017-07-26

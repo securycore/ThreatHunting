@@ -1,4 +1,4 @@
-FUNCTION Get-Processes {
+FUNCTION Hunt-Processes {
     <#
     .Synopsis 
         Gets the processes applied to a given system.
@@ -19,11 +19,11 @@ FUNCTION Get-Processes {
         Provide a path to save failed systems to.
 
     .Example 
-        Get-Processes 
-        Get-Processes SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Get-Processes
-        Get-Processes $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-Processes
+        Hunt-Processes 
+        Hunt-Processes SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-Processes
+        Hunt-Processes $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Processes
 
     .Notes 
         Updated: 2017-09-05

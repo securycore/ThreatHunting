@@ -1,4 +1,4 @@
-FUNCTION Get-SCCMLocalGroupMembers {
+FUNCTION Hunt-SCCMLocalGroupMembers {
 <#
 .Synopsis 
     Queries SCCM for a given hostname, FQDN, or IP address.
@@ -18,11 +18,11 @@ FUNCTION Get-SCCMLocalGroupMembers {
     firewalls in some environments.
 
 .Example 
-    Get-SCCMLocalGroupMembers 
-    Get-SCCMLocalGroupMembers SomeHostName.domain.com
-    Get-Content C:\hosts.csv | Get-SCCMLocalGroupMembers
-    Get-SCCMLocalGroupMembers $env:computername
-    Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMLocalGroupMembers
+    Hunt-SCCMLocalGroupMembers 
+    Hunt-SCCMLocalGroupMembers SomeHostName.domain.com
+    Get-Content C:\hosts.csv | Hunt-SCCMLocalGroupMembers
+    Hunt-SCCMLocalGroupMembers $env:computername
+    Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMLocalGroupMembers
 
 .Notes 
     Updated: 2017-09-06

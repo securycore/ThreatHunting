@@ -1,4 +1,4 @@
-FUNCTION Get-Shares {
+FUNCTION Hunt-Shares {
     <#
     .Synopsis 
         Gets the shares configured on a given system.
@@ -13,11 +13,11 @@ FUNCTION Get-Shares {
         Provide a path to save failed systems to.
 
     .Example 
-        Get-Shares 
-        Get-Shares SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Get-Shares
-        Get-Shares $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-Shares
+        Hunt-Shares 
+        Hunt-Shares SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-Shares
+        Hunt-Shares $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Shares
 
     .Notes 
         Updated: 2017-09-01
