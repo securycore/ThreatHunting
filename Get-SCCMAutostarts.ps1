@@ -25,7 +25,7 @@ FUNCTION Get-SCCMAutostarts {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMAutostarts
 
 .Notes 
-    Updated: 2017-07-25
+    Updated: 2017-09-06
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Get-SCCMAutostarts {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -62,6 +62,25 @@ FUNCTION Get-SCCMAutostarts {
         $stopwatch.Start();
 
         $total = 0;
+
+        class Autostart {
+            [String] $Computer
+            [DateTime] $DateScanned
+            [String] $ResourceNames
+            [String] $Description
+            [String] $FileName
+            [String] $FilePropertiesHash
+            [String] $FilePropertiesHashEx
+            [String] $FileVersion
+            [String] $Location
+            [String] $Product
+            [String] $ProductVersion
+            [String] $Publisher
+            [String] $RevisionID
+            [String] $StartupType
+            [String] $StartupValue
+            [String] $Timestamp
+        };
 	};
 
     PROCESS{        
@@ -77,43 +96,39 @@ FUNCTION Get-SCCMAutostarts {
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
         };
 
-        $output = [PSCustomObject]@{
-            Name = $ThisComputer
-            ResourceNames = ""
-            Description = ""
-            FileName = ""
-            FilePropertiesHash = ""
-            FilePropertiesHashEx = ""
-            FileVersion = ""
-            Location = ""
-            Product = ""
-            ProductVersion = ""
-            Publisher = ""
-            RevisionID = ""
-            StartupType = ""
-            StartupValue = ""
-            Timestamp = ""
-        };
 
         if ($CIM){
             
+            $SMS_R_System = $Null;
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_AUTOSTART_SOFTWARE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Description, FileName, FilePropertiesHash, FilePropertiesHashEx, FileVersion, Location, Product, ProductVersion, Publisher, RevisionID, StartupType, StartupValue, TimeStamp from SMS_G_System_AUTOSTART_SOFTWARE where ResourceID='$ResourceID'";
+            
+            if ($SMS_R_System) {
+                $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_AUTOSTART_SOFTWARE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Description, FileName, FilePropertiesHash, FilePropertiesHashEx, FileVersion, Location, Product, ProductVersion, Publisher, RevisionID, StartupType, StartupValue, TimeStamp from SMS_G_System_AUTOSTART_SOFTWARE where ResourceID='$ResourceID'";
+            };
         }
         else{
             
+            $SMS_R_System = $Null;
             $SMS_R_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_AUTOSTART_SOFTWARE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select Description, FileName, FilePropertiesHash, FilePropertiesHashEx, FileVersion, Location, Product, ProductVersion, Publisher, RevisionID, StartupType, StartupValue, TimeStamp from SMS_G_System_AUTOSTART_SOFTWARE where ResourceID='$ResourceID'";
+            
+            if ($SMS_R_System) {
+                $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_AUTOSTART_SOFTWARE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select Description, FileName, FilePropertiesHash, FilePropertiesHashEx, FileVersion, Location, Product, ProductVersion, Publisher, RevisionID, StartupType, StartupValue, TimeStamp from SMS_G_System_AUTOSTART_SOFTWARE where ResourceID='$ResourceID'";
+            };
         };
 
         if ($SMS_G_System_AUTOSTART_SOFTWARE){
                 
             $SMS_G_System_AUTOSTART_SOFTWARE | ForEach-Object {
                 
+                $output = $null;
+				$output = [Autostart]::new();
+   
+                $output.Computer = $ThisComputer;
+				$output.DateScanned = Get-Date -Format u;
+                
                 $output.ResourceNames = $SMS_R_System.ResourceNames[0];
-
                 $output.Description = $_.Description;
                 $output.FileName = $_.FileName;
                 $output.FilePropertiesHash = $_.FilePropertiesHash;
@@ -129,13 +144,17 @@ FUNCTION Get-SCCMAutostarts {
                 $output.Timestamp = $_.Timestamp;
 
                 return $output;
-                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
             };
         }
         else {
 
+            $output = $null;
+			$output = [Autostart]::new();
+
+			$output.Computer = $Computer;
+			$output.DateScanned = Get-Date -Format u;
+			
             return $output;
-            $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
         };
 
         $elapsed = $stopwatch.Elapsed;
