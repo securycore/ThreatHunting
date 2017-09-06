@@ -102,7 +102,8 @@ FUNCTION Hunt-SCCMConsoleUsers {
 			};
 		}
         else{
-			$SMS_R_System = $Null;
+			
+            $SMS_R_System = $Null;
             $SMS_R_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
             
 			if ($SMS_R_System) {
@@ -117,6 +118,9 @@ FUNCTION Hunt-SCCMConsoleUsers {
               
                 $output = $null;
 				$output = [User]::new();
+				
+				$output.Computer = $ThisComputer;
+				$output.DateScanned = Get-Date -Format u;
 
                 $output.ResourceNames = $SMS_R_System.ResourceNames[0];
 
