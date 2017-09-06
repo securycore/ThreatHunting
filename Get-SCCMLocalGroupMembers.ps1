@@ -25,7 +25,7 @@ FUNCTION Get-SCCMLocalGroupMembers {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Get-SCCMLocalGroupMembers
 
 .Notes 
-    Updated: 2017-07-25
+    Updated: 2017-09-06
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Get-SCCMLocalGroupMembers {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -62,6 +62,21 @@ FUNCTION Get-SCCMLocalGroupMembers {
         $stopwatch.Start();
 
         $total = 0;
+		
+		class Autostart {
+            [String] $Computer
+            [DateTime] $DateScanned
+            
+			[String] $ResourceNames
+			[String] $Account
+			[String] $Category
+			[String] $Domain
+			[String] $GroupID
+			[String] $GroupName
+			[String] $Type
+			[String] $RevisionID
+			[String] $Timestamp
+        };
 	};
 
     PROCESS{        
@@ -77,36 +92,39 @@ FUNCTION Get-SCCMLocalGroupMembers {
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
         };
 
-        $output = [PSCustomObject]@{
-            Name = $ThisComputer
-            ResourceNames = ""
-            Account = ""
-            Category = ""
-            Domain = ""
-            GroupID = ""
-            GroupName = ""
-            Type = ""
-            RevisionID = ""
-            Timestamp = ""
-        };
-
         if ($CIM){
 
+			$SMS_R_System = $Null;
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_LocalGroupMembers = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Account, Category, Domain, GroupID, Name, RevisionID, TimeStamp, Type from SMS_G_System_LocalGroupMembers where ResourceID='$ResourceID'";
+            
+			if ($SMS_R_System) {
+				
+				$ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+				$SMS_G_System_LocalGroupMembers = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Account, Category, Domain, GroupID, Name, RevisionID, TimeStamp, Type from SMS_G_System_LocalGroupMembers where ResourceID='$ResourceID'";
+			};
         }
         else{
+			$SMS_R_System = $Null;
             $SMS_R_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_LocalGroupMembers = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select Account, Category, Domain, GroupID, Name, RevisionID, TimeStamp, Type from SMS_G_System_LocalGroupMembers where ResourceID='$ResourceID'";
+            
+			if ($SMS_R_System) {
+				
+				$ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+				$SMS_G_System_LocalGroupMembers = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select Account, Category, Domain, GroupID, Name, RevisionID, TimeStamp, Type from SMS_G_System_LocalGroupMembers where ResourceID='$ResourceID'";
+			};
         };
 
         if ($SMS_G_System_LocalGroupMembers){
                 
             $SMS_G_System_LocalGroupMembers | ForEach-Object {
                 
-                $output.ResourceNames = $SMS_R_System.ResourceNames[0];
+				$output = $null;
+				$output = [Autostart]::new();
+   
+                $output.Computer = $ThisComputer;
+				$output.DateScanned = Get-Date -Format u;
+				
+				$output.ResourceNames = $SMS_R_System.ResourceNames[0];
 
                 $output.Account = $_.Account;
                 $output.Category = $_.Category;
@@ -118,13 +136,17 @@ FUNCTION Get-SCCMLocalGroupMembers {
                 $output.Timestamp = $_.Timestamp;
 
                 return $output;
-                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
             };
         }
         else {
 
+            $output = $null;
+			$output = [Autostart]::new();
+
+			$output.Computer = $Computer;
+			$output.DateScanned = Get-Date -Format u;
+			
             return $output;
-            $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
         };
 
         $elapsed = $stopwatch.Elapsed;
