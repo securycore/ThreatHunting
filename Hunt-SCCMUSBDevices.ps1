@@ -25,7 +25,7 @@ FUNCTION Hunt-SCCMUSBDevices {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Get-USBDevices
 
 .Notes 
-    Updated: 2017-07-25
+    Updated: 2017-09-06
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Hunt-SCCMUSBDevices {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -62,7 +62,26 @@ FUNCTION Hunt-SCCMUSBDevices {
         $stopwatch.Start();
 
         $total = 0;
-	}
+		
+		class USBDevice {
+            [String] $Computer
+            [DateTime] $DateScanned
+            
+			[String] $ResourceNames
+			[String] $Caption
+			[String] $ClassGuid
+			[String] $CreationClassName
+			[String] $Description
+			[String] $DeviceID
+			[String] $Manufacturer
+			[String] $DeviceName
+			[String] $PNPDeviceID
+			[String] $Service
+			[String] $Status
+			[String] $SystemCreationClassName
+			[String] $Timestamp
+        };
+	};
 
     PROCESS{        
                 
@@ -77,42 +96,38 @@ FUNCTION Hunt-SCCMUSBDevices {
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
         };
 
-        $output = [PSCustomObject]@{
-            Name = $ThisComputer
-            ResourceNames = ""
-            Caption = ""
-            ClassGuid = ""
-            CreationClassName = ""
-            Description = ""
-            DeviceID = ""
-            Manufacturer = ""
-            DeviceName = ""
-            PNPDeviceID = ""
-            Service = ""
-            Status = ""
-            SystemCreationClassName = ""
-            Timestamp = ""
-        }
-
         if ($CIM){
             
+			$SMS_R_System = $Null;
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_USB_DEVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Caption, ClassGuid, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPDeviceID, Service, Status, SystemCreationClassName, TimeStamp from SMS_G_System_USB_DEVICE where ResourceID='$ResourceID'";
-        }
+            
+			if ($SMS_R_System) {
+				$ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+				$SMS_G_System_USB_DEVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Caption, ClassGuid, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPDeviceID, Service, Status, SystemCreationClassName, TimeStamp from SMS_G_System_USB_DEVICE where ResourceID='$ResourceID'";
+			};
+		}
         else{
             
+			$SMS_R_System = $Null;
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceNames, ResourceID from SMS_R_System where name='$ThisComputer'";
-            $ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_USB_DEVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Caption, ClassGuid, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPDeviceID, Service, Status, SystemCreationClassName, TimeStamp from SMS_G_System_USB_DEVICE where ResourceID='$ResourceID'";
+            
+			if ($SMS_R_System) {
+				$ResourceID = $SMS_R_System.ResourceID; # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+				$SMS_G_System_USB_DEVICE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select Caption, ClassGuid, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPDeviceID, Service, Status, SystemCreationClassName, TimeStamp from SMS_G_System_USB_DEVICE where ResourceID='$ResourceID'";
+			};
         };
 
         if ($SMS_G_System_USB_DEVICE){
                 
             $SMS_G_System_USB_DEVICE | ForEach-Object {
                 
+				$output = $null;
+				$output = [USBDevice]::new();
+				
+				$output.Computer = $ThisComputer;
+				$output.DateScanned = Get-Date -Format u;
+				
                 $output.ResourceNames = $SMS_R_System.ResourceNames[0]
-
                 $output.Caption = $_.Caption;
                 $output.ClassGuid = $_.ClassGuid;
                 $output.CreationClassName = $_.CreationClassName;
@@ -124,17 +139,20 @@ FUNCTION Hunt-SCCMUSBDevices {
                 $output.Service = $_.Service;
                 $output.Status = $_.Status;
                 $output.SystemCreationClassName = $_.SystemCreationClassName;
-                    
                 $output.Timestamp = $_.Timestamp;
                     
                 return $output;
-                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
             };
         }
         else {
+			
+			$output = $null;
+			$output = [USBDevice]::new();
 
+			$output.Computer = $Computer;
+			$output.DateScanned = Get-Date -Format u;
+			
             return $output;
-            $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
         };
 
         $elapsed = $stopwatch.Elapsed;
