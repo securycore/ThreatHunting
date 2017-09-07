@@ -60,11 +60,11 @@ FUNCTION Hunt-InterfaceDetails {
             [String] $Description
             [String] $NetConnectionID
             [String] $NetEnabled
-            [String] $ifIndex
+            [String] $InterfaceIndex
             [String] $Speed
-            [String] $MAC
-            [String] $IP
-            [String] $SubNet
+            [String] $MACAddress
+            [String] $IPAddress
+            [String] $Subnet
             [String] $Gateway
             [String] $DNS
             [String] $MTU
@@ -100,12 +100,12 @@ FUNCTION Hunt-InterfaceDetails {
                     $output.Description = $Adapter.Description;
                     $output.NetConnectionID = $Adapter.NetConnectionID;
                     $output.NetEnabled = $Adapter.NetEnabled;
-                    $output.ifIndex = $Adapter.InterfaceIndex;
+                    $output.InterfaceIndex = $Adapter.InterfaceIndex;
                     $output.Speed = $Adapter.Speed;
-                    $output.MAC = $Adapter.MACAddress;
+                    $output.MACAddress = $Adapter.MACAddress;
 
-                    $output.IP = $AdapterConfig.ipaddress[0];
-                    $output.SubNet = $AdapterConfig.IPsubnet[0];
+                    $output.IPAddress = $AdapterConfig.ipaddress[0];
+                    $output.Subnet = $AdapterConfig.IPsubnet[0];
                     $output.Gateway = $AdapterConfig.DefaultIPGateway;
                     $output.DNS = $AdapterConfig.DNSServerSearchOrder;
                     $output.MTU = $AdapterConfig.MTU;
