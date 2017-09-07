@@ -1,4 +1,4 @@
-FUNCTION Hunt-Shares {
+FUNCTION Hunt-SharePermissions {
     <#
     .Synopsis 
         Gets the shares configured on a given system.
@@ -13,14 +13,14 @@ FUNCTION Hunt-Shares {
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-Shares 
-        Hunt-Shares SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-Shares
-        Hunt-Shares $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Shares
+        Hunt-SharePermissions 
+        Hunt-SharePermissions SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-SharePermissions
+        Hunt-SharePermissions $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SharePermissions
 
     .Notes 
-        Updated: 2017-09-01
+        Updated: 2017-09-07
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ FUNCTION Hunt-Shares {
             0x80000 =     "Write Owner"
         };
 
-        class EnumeratedShare
+        class SharePermission
         {
             [String] $Computer
             [Datetime] $DateScanned
@@ -87,8 +87,6 @@ FUNCTION Hunt-Shares {
 
         $Shares = $null;
         $Shares = Get-WmiObject -class Win32_share -Filter "type=0" -ComputerName $Computer -ErrorAction SilentlyContinue;
-
-        
 
         if ($Shares) {
             $OutputArray = $null;
@@ -127,7 +125,7 @@ FUNCTION Hunt-Shares {
                     };
 
                     $output = $null;
-                    $output = [EnumeratedShare]::new();
+                    $output = [SharePermission]::new();
 
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
@@ -157,7 +155,7 @@ FUNCTION Hunt-Shares {
             else{ # -Fails switch not used
                             
                 $output = $null;
-                $output = [EnumeratedShare]::new();
+                $output = [SharePermission]::new();
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
