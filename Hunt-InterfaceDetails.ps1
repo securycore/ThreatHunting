@@ -1,10 +1,10 @@
-FUNCTION Get-InterfaceDetails {
+FUNCTION Hunt-InterfaceDetails {
     <#
     .Synopsis 
-        Gets the interface(s) settings for the given computer(s).
+        Gets the Interface(s) settings for the given computer(s).
 
     .Description 
-        Gets the interface(s) settings for the given computer(s) and returns a PS Object.
+        Gets the Interface(s) settings for the given computer(s) and returns a PS Object.
 
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
@@ -13,15 +13,15 @@ FUNCTION Get-InterfaceDetails {
         Provide a path to save failed systems to.
 
     .Example 
-        Get-InterfaceDetails 
-        Get-InterfaceDetails SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Get-InterfaceDetails
-        Get-InterfaceDetails -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Get-InterfaceDetails
+        Hunt-InterfaceDetails 
+        Hunt-InterfaceDetails SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-InterfaceDetails
+        Hunt-InterfaceDetails -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-InterfaceDetails
 
     .Notes 
-        Updated: 2017-08-31
-        LEGAL: Copyright (C) 2017  Jeremy Arnold
+        Updated: 2017-09-07
+        LEGAL: Copyright (C) 2017 Jeremy Arnold
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -51,39 +51,92 @@ FUNCTION Get-InterfaceDetails {
         $stopwatch = New-Object System.Diagnostics.Stopwatch;
         $stopwatch.Start();
         $total = 0;
+
+        class Adapter {
+            [String] $Computer
+            [DateTime] $DateScanned
+            
+            [String] $FQDN
+            [String] $Description
+            [String] $NetConnectionID
+            [String] $NetEnabled
+            [String] $ifIndex
+            [String] $Speed
+            [String] $MAC
+            [String] $IP
+            [String] $SubNet
+            [String] $Gateway
+            [String] $DNS
+            [String] $MTU
+        };
         
 	};
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $interfaces = Invoke-Command -ScriptBlock {Get-NetAdapter} -ErrorAction SilentlyContinue; # get network adapters 
-        $output = @();
-           
-            foreach ($interface in $interfaces) {#loop through the interfaces and build the custom output
+        $Adapters = Get-CimInstance Win32_NetworkAdapter -Computer $Computer | Select-Object * -ErrorAction SilentlyContinue;
+
+        if ($Adapters) {
+
+            $AdapterConfigs = Get-CimInstance Win32_NetworkAdapterConfiguration -Computer $Computer | Select-Object * -ErrorAction SilentlyContinue;
+            
+            $OutputArray = $null;
+            $OutputArray = @();
+
+            foreach ($Adapter in $Adapters) {#loop through the Interfaces and build the custom output
                 
-                $ipDetails = Invoke-Command -ScriptBlock {Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.interfaceIndex -eq $interface.ifIndex}} | Select-Object * -ErrorAction SilentlyContinue;
-                $object = New-Object -TypeName psobject;
+                if ($Adapter.NetEnabled) {
+
+                    $AdapterConfig = $AdapterConfigs | Where {$_.InterfaceIndex -eq $Adapter.InterfaceIndex};
+
+                    $output = $null;
+			        $output = [Adapter]::new();
+   
+                    $output.Computer = $Computer;
+                    $output.DateScanned = Get-Date -Format u;
                 
-                $object | Add-Member -MemberType NoteProperty -Name ComputerName -Value $Computer;
-                $object | Add-Member –MemberType NoteProperty –Name DNSDomain -Value $ipDetails.DNSDomain;
-                $object | Add-Member –MemberType NoteProperty –Name Name -Value $interface.name;
-                $object | Add-Member –MemberType NoteProperty –Name Description -Value $interface.interfaceDescription;
-                $object | Add-Member –MemberType NoteProperty –Name Status -Value $interface.status;
-                $object | Add-Member –MemberType NoteProperty –Name ifIndex -Value $interface.ifIndex;
-                $object | Add-Member –MemberType NoteProperty –Name LinkSpeed -Value $interface.linkspeed;
-                $object | Add-Member –MemberType NoteProperty –Name MAC -Value $interface.macAddress;
-                $object | Add-Member –MemberType NoteProperty –Name IP -Value $ipDetails.ipaddress;
-                $object | Add-Member –MemberType NoteProperty –Name SubNet -Value $ipDetails.IPsubnet;
-                $object | Add-Member –MemberType NoteProperty –Name Gateway -Value $ipDetails.DefaultIPGateway;
-                $object | Add-Member –MemberType NoteProperty –Name DNS -Value $ipDetails.DNSServerSearchOrder;
-                $object | Add-Member –MemberType NoteProperty –Name MTU -Value $interface.MtuSize;
+                    $output.FQDN = $Adapter.SystemName;
+                    $output.Description = $Adapter.Description;
+                    $output.NetConnectionID = $Adapter.NetConnectionID;
+                    $output.NetEnabled = $Adapter.NetEnabled;
+                    $output.ifIndex = $Adapter.InterfaceIndex;
+                    $output.Speed = $Adapter.Speed;
+                    $output.MAC = $Adapter.MACAddress;
+
+                    $output.IP = $AdapterConfig.ipaddress[0];
+                    $output.SubNet = $AdapterConfig.IPsubnet[0];
+                    $output.Gateway = $AdapterConfig.DefaultIPGateway;
+                    $output.DNS = $AdapterConfig.DNSServerSearchOrder;
+                    $output.MTU = $AdapterConfig.MTU;
  
-                $output += $object;
+                    $OutputArray += $output;
+                };
             };
 
-        Return $output | Select-Object *;
+            $elapsed = $stopwatch.Elapsed;
+            $total = $total+1;
+
+            Return $OutputArray;
+        }
         
+        else { # System was not reachable
+
+            if ($Fails) { # -Fails switch was used
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+
+            else{ # -Fails switch not used
+                            
+                $output = $null;
+                $output = [Adapter]::new();
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+
+                $total = $total+1;
+                return $output;
+            };
+        };
     };
 
     END{
