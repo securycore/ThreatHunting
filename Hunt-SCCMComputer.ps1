@@ -25,7 +25,7 @@ FUNCTION Hunt-SCCMComputer {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMComputer
 
 .Notes 
-    Updated: 2017-07-26
+    Updated: 2017-09-11
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Hunt-SCCMComputer {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -62,6 +62,45 @@ FUNCTION Hunt-SCCMComputer {
         $stopwatch.Start();
 
         $total = 0;
+
+        
+        class SCCMComputer {
+            [String] $Computer
+            [DateTime] $DateScanned
+            
+            [String] $Domain
+            [String] $DistinguishedName
+            [String] $ResourceNames
+            [String] $IsVirtualMachine
+            [String] $LastLogonTimestamp
+            [String] $LastLogonUserDomain
+            [String] $LastLogonUserName
+            [String] $IPAddress
+            [String] $IPSubnet
+            [String] $MACAddress
+            [String] $ResourceID
+            [String] $CPUType
+            [String] $LastSCCMHeartBeat
+            [String] $OperatingSystemNameandVersion
+            [String] $Manufacturer
+            [String] $Model
+            [String] $SystemType
+            [String] $UserName
+            [String] $CurrentTimeZone
+            [String] $DomainRole
+            [String] $NumberOfProcessors
+            [String] $TimeStamp
+            [String] $SerialNumber
+            [String] $ChassisTypes
+            [String] $BIOSManufacturer
+            [String] $BIOSName
+            [String] $BIOSVersion
+            [String] $BIOSReleaseDate
+            [String] $InstallDate
+            [String] $LastBootUpTime
+            [String] $Caption
+            [String] $CSDVersion
+        };
 	};
 
     PROCESS{        
@@ -75,63 +114,38 @@ FUNCTION Hunt-SCCMComputer {
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '')
         };
 
-        $output = [PSCustomObject]@{
-            Name = $ThisComputer
-            Domain = ""
-            DistinguishedName = ""
-            ResourceNames = ""
-            IsVirtualMachine = ""
-            LastLogonTimestamp = ""
-            LastLogonUserDomain = ""
-            LastLogonUserName = ""
-            IPAddresses = ""
-            IPSubnets = ""
-            MACAddresses = ""
-            ResourceID = ""
-            CPUType = ""
-            LastSCCMHeartBeat = ""
-            OperatingSystemNameandVersion = ""
-            Manufacturer = ""
-            Model = ""
-            SystemType = ""
-            UserName = ""
-            CurrentTimeZone = ""
-            DomainRole = ""
-            NumberOfProcessors = ""
-            TimeStamp = ""
-            SerialNumber = ""
-            ChassisTypes = ""
-            BIOSManufacturer = ""
-            BIOSName = ""
-            BIOSVersion = ""
-            BIOSReleaseDate = ""
-            InstallDate = ""
-            LastBootUpTime = ""
-            Caption = ""
-            CSDVersion = ""
-        };
-
         if ($CIM){
             
             $SMS_R_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select IsVirtualMachine, LastLogonTimestamp, LastLogonUserDomain, LastLogonUserName, MACAddresses, OperatingSystemNameandVersion, ResourceNames, IPAddresses, IPSubnets, AgentTime, ResourceID, CPUType, DistinguishedName from SMS_R_System where name='$ThisComputer'"
-            $ResourceID = $SMS_R_System.ResourceID # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_Computer_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Model, Domain, SystemType, UserName, CurrentTimeZone, DomainRole, NumberOfProcessors, TimeStamp from SMS_G_System_Computer_System where ResourceID='$ResourceID'"
-            $SMS_G_System_SYSTEM_ENCLOSURE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, SerialNumber, ChassisTypes from SMS_G_System_SYSTEM_ENCLOSURE where ResourceID='$ResourceID'"
-            $SMS_G_System_PC_BIOS = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Name, SMBIOSBIOSVersion, ReleaseDate from SMS_G_System_PC_BIOS where ResourceID='$ResourceID'"
-            $SMS_G_System_OPERATING_SYSTEM = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select InstallDate, LastBootUpTime, Caption, CSDVersion from SMS_G_System_OPERATING_SYSTEM where ResourceID='$ResourceID'"
+            
+            if ($SMS_R_System) {
+                $ResourceID = $SMS_R_System.ResourceID # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_Computer_System = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Model, Domain, SystemType, UserName, CurrentTimeZone, DomainRole, NumberOfProcessors, TimeStamp from SMS_G_System_Computer_System where ResourceID='$ResourceID'"
+                $SMS_G_System_SYSTEM_ENCLOSURE = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, SerialNumber, ChassisTypes from SMS_G_System_SYSTEM_ENCLOSURE where ResourceID='$ResourceID'"
+                $SMS_G_System_PC_BIOS = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Name, SMBIOSBIOSVersion, ReleaseDate from SMS_G_System_PC_BIOS where ResourceID='$ResourceID'"
+                $SMS_G_System_OPERATING_SYSTEM = Get-CIMInstance -namespace $SCCMNameSpace -computer $SCCMServer -query "select InstallDate, LastBootUpTime, Caption, CSDVersion from SMS_G_System_OPERATING_SYSTEM where ResourceID='$ResourceID'"
+            };
         }
             
         else{
             
             $SMS_R_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select IsVirtualMachine, LastLogonTimestamp, LastLogonUserDomain, LastLogonUserName, MACAddresses, OperatingSystemNameandVersion, ResourceNames, IPAddresses, IPSubnets, AgentTime, ResourceID, CPUType, DistinguishedName from SMS_R_System where name='$ThisComputer'"
-            $ResourceID = $SMS_R_System.ResourceID # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
-            $SMS_G_System_Computer_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Model, Domain, SystemType, UserName, CurrentTimeZone, DomainRole, NumberOfProcessors, TimeStamp from SMS_G_System_Computer_System where ResourceID='$ResourceID'"
-            $SMS_G_System_SYSTEM_ENCLOSURE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, SerialNumber, ChassisTypes from SMS_G_System_SYSTEM_ENCLOSURE where ResourceID='$ResourceID'"
-            $SMS_G_System_PC_BIOS = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Name, SMBIOSBIOSVersion, ReleaseDate from SMS_G_System_PC_BIOS where ResourceID='$ResourceID'"
-            $SMS_G_System_OPERATING_SYSTEM = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select InstallDate, LastBootUpTime, Caption, CSDVersion from SMS_G_System_OPERATING_SYSTEM where ResourceID='$ResourceID'"
+            
+            if ($SMS_R_System) {
+                $ResourceID = $SMS_R_System.ResourceID # Needed since -query seems to lack support for calling $SMS_R_System.ResourceID directly.
+                $SMS_G_System_Computer_System = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Model, Domain, SystemType, UserName, CurrentTimeZone, DomainRole, NumberOfProcessors, TimeStamp from SMS_G_System_Computer_System where ResourceID='$ResourceID'"
+                $SMS_G_System_SYSTEM_ENCLOSURE = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, SerialNumber, ChassisTypes from SMS_G_System_SYSTEM_ENCLOSURE where ResourceID='$ResourceID'"
+                $SMS_G_System_PC_BIOS = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select ResourceID, Manufacturer, Name, SMBIOSBIOSVersion, ReleaseDate from SMS_G_System_PC_BIOS where ResourceID='$ResourceID'"
+                $SMS_G_System_OPERATING_SYSTEM = Get-WmiObject -namespace $SCCMNameSpace -computer $SCCMServer -query "select InstallDate, LastBootUpTime, Caption, CSDVersion from SMS_G_System_OPERATING_SYSTEM where ResourceID='$ResourceID'"
+            };
         };
             
-        $output.Name = $ThisComputer;
+        
+        $output = $null;
+		$output = [SCCMComputer]::new();
+   
+        $output.Computer = $Computer;
+        $output.DateScanned = Get-Date -Format u;
             
         if ($SMS_R_System){
             
@@ -142,61 +156,79 @@ FUNCTION Hunt-SCCMComputer {
             $output.LastLogonTimestamp = $SMS_R_System.LastLogonTimestamp
             $output.LastLogonUserDomain = $SMS_R_System.LastLogonUserDomain
             $output.LastLogonUserName = $SMS_R_System.LastLogonUserName
-            $output.IPAddresses = $SMS_R_System.IPAddresses -join " "
-            $output.IPSubnets = $SMS_R_System.IPSubnets -join " "
-            $output.MACAddresses = $SMS_R_System.MACAddresses -join " "
+            $output.IPAddress = ($SMS_R_System.IPAddresses -join " ").Split(" ")[0]
+            $output.IPSubnet = ($SMS_R_System.IPSubnets -join " ").Split(" ")[0]
+            $output.MACAddress = ($SMS_R_System.MACAddresses -join " ").Split(" ")[0]
             $output.ResourceID = $SMS_R_System.ResourceID
             $output.CPUType = $SMS_R_System.CPUType
             if ($SMS_R_System.AgentTime[3]) { # Sometimes fails
                 $output.LastSCCMHeartBeat = $SMS_R_System.AgentTime[3]
             };
             $output.OperatingSystemNameandVersion = $SMS_R_System.OperatingSystemNameandVersion
+
+            if ($SMS_G_System_Computer_System){
+            
+                $output.Manufacturer = $SMS_G_System_Computer_System.Manufacturer
+                $output.Model = $SMS_G_System_Computer_System.Model
+                $output.SystemType = $SMS_G_System_Computer_System.SystemType
+                $output.UserName = $SMS_G_System_Computer_System.UserName
+                $output.CurrentTimeZone = $SMS_G_System_Computer_System.CurrentTimeZone
+                $output.DomainRole = $SMS_G_System_Computer_System.DomainRole
+                $output.NumberOfProcessors = $SMS_G_System_Computer_System.NumberOfProcessors
+                $output.TimeStamp = $SMS_G_System_Computer_System.TimeStamp
+            }; 
+
+            if ($SMS_G_System_SYSTEM_ENCLOSURE){
+            
+                $output.SerialNumber = $SMS_G_System_SYSTEM_ENCLOSURE.SerialNumber
+                $output.ChassisTypes = $SMS_G_System_SYSTEM_ENCLOSURE.ChassisTypes
+            };
+
+            if ($SMS_G_System_PC_BIOS){
+            
+                $output.BIOSManufacturer = $SMS_G_System_PC_BIOS.Manufacturer
+                $output.BIOSName = $SMS_G_System_PC_BIOS.Name
+                $output.BIOSVersion = $SMS_G_System_PC_BIOS.SMBIOSBIOSVersion
+                $output.BIOSReleaseDate = $SMS_G_System_PC_BIOS.ReleaseDate
+            };
+
+            if ($SMS_G_System_OPERATING_SYSTEM){
+            
+                $output.InstallDate = $SMS_G_System_OPERATING_SYSTEM.InstallDate
+                $output.LastBootUpTime = $SMS_G_System_OPERATING_SYSTEM.LastBootUpTime
+                $output.Caption = $SMS_G_System_OPERATING_SYSTEM.Caption
+                $output.CSDVersion = $SMS_G_System_OPERATING_SYSTEM.CSDVersion
+            };
+            
+
+            $elapsed = $stopwatch.Elapsed;
+            $total = $total+1;
+            
+
+            Write-Verbose -Message "System $total `t $ThisComputer `t Time Elapsed: $elapsed";
+
+            return $output;
+        
+        }
+
+        else { # System was not reachable
+
+            if ($Fails) { # -Fails switch was used
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+
+            else{ # -Fails switch not used
+                            
+                $output = $null;
+                $output = [Adapter]::new();
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+
+                $total = $total+1;
+                return $output;
+            };
         };
 
-        if ($SMS_G_System_Computer_System){
-            
-            $output.Manufacturer = $SMS_G_System_Computer_System.Manufacturer
-            $output.Model = $SMS_G_System_Computer_System.Model
-            $output.SystemType = $SMS_G_System_Computer_System.SystemType
-            $output.UserName = $SMS_G_System_Computer_System.UserName
-            $output.CurrentTimeZone = $SMS_G_System_Computer_System.CurrentTimeZone
-            $output.DomainRole = $SMS_G_System_Computer_System.DomainRole
-            $output.NumberOfProcessors = $SMS_G_System_Computer_System.NumberOfProcessors
-            $output.TimeStamp = $SMS_G_System_Computer_System.TimeStamp
-        }; 
-
-        if ($SMS_G_System_SYSTEM_ENCLOSURE){
-            
-            $output.SerialNumber = $SMS_G_System_SYSTEM_ENCLOSURE.SerialNumber
-            $output.ChassisTypes = $SMS_G_System_SYSTEM_ENCLOSURE.ChassisTypes
-        };
-
-        if ($SMS_G_System_PC_BIOS){
-            
-            $output.BIOSManufacturer = $SMS_G_System_PC_BIOS.Manufacturer
-            $output.BIOSName = $SMS_G_System_PC_BIOS.Name
-            $output.BIOSVersion = $SMS_G_System_PC_BIOS.SMBIOSBIOSVersion
-            $output.BIOSReleaseDate = $SMS_G_System_PC_BIOS.ReleaseDate
-        };
-
-        if ($SMS_G_System_OPERATING_SYSTEM){
-            
-            $output.InstallDate = $SMS_G_System_OPERATING_SYSTEM.InstallDate
-            $output.LastBootUpTime = $SMS_G_System_OPERATING_SYSTEM.LastBootUpTime
-            $output.Caption = $SMS_G_System_OPERATING_SYSTEM.Caption
-            $output.CSDVersion = $SMS_G_System_OPERATING_SYSTEM.CSDVersion
-        };
-            
-
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
-            
-
-        Write-Verbose -Message "System $total `t $ThisComputer `t Time Elapsed: $elapsed";
-
-        return $output;
-
-        $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)};
     };
 
     END{
