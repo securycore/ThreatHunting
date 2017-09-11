@@ -220,7 +220,7 @@ FUNCTION Hunt-SCCMComputer {
             else{ # -Fails switch not used
                             
                 $output = $null;
-                $output = [Adapter]::new();
+                $output = [SCCMComputer]::new();
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
