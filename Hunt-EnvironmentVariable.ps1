@@ -29,9 +29,7 @@ Function Hunt-EnvironmentVariable() {
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-
 	[cmdletbinding()]
-
 
 	PARAM(
         [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
