@@ -96,7 +96,7 @@ Function Hunt-EnvironmentVariable() {
 
                 };
 		    };
-			
+
             $elapsed = $stopwatch.Elapsed;
             $total = $total+1;
 
