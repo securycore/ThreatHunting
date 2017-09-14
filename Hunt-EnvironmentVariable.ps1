@@ -1,10 +1,10 @@
 Function Hunt-EnvironmentVariable() {
     <#
     .Synopsis 
-        Retreives the values of a specified environment variable from one or more systems.
+        Retreives the values of all environment variables from one or more systems.
     
     .Description
-        Retreives the values of a specified environment variable from one or more systems.
+        Retreives the values of all environment variables from one or more systems.
     
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
