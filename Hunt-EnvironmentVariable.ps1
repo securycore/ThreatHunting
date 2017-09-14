@@ -34,7 +34,7 @@ Function Hunt-EnvironmentVariable() {
 
 
 	PARAM(
-		[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
+        [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
@@ -65,14 +65,14 @@ Function Hunt-EnvironmentVariable() {
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
         $AllVariables = $null;
-		$AllVariables = Get-CimInstance -Class Win32_Environment -ComputerName $Computer -ErrorAction SilentlyContinue;
+        $AllVariables = Get-CimInstance -Class Win32_Environment -ComputerName $Computer -ErrorAction SilentlyContinue;
         
         if ($AllVariables) {
 
             $OutputArray = $null;
             $OutputArray = @();
 
-		    ForEach ($Variable in $AllVariables) {
+            ForEach ($Variable in $AllVariables) {
                 $VariableValues = $Variable.VariableValue.Split(";") | Where-Object {$_ -ne ""}
             
                 Foreach ($VariableValue in $VariableValues) {
@@ -80,7 +80,7 @@ Function Hunt-EnvironmentVariable() {
                     $VariableValueSplit.VariableValue = $VariableValue;
                 
                     $output = $null;
-		            $output = [EnvVariable]::new();
+                    $output = [EnvVariable]::new();
    
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
@@ -95,7 +95,7 @@ Function Hunt-EnvironmentVariable() {
                     $OutputArray += $output;
 
                 };
-		    };
+	        };
 
             $elapsed = $stopwatch.Elapsed;
             $total = $total+1;
@@ -126,6 +126,6 @@ Function Hunt-EnvironmentVariable() {
         $elapsed = $stopwatch.Elapsed;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-	};
+    };
 };
 
