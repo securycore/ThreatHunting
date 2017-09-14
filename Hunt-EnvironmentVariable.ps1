@@ -10,10 +10,10 @@ Function Hunt-EnvironmentVariable() {
         Computer can be a single hostname, FQDN, or IP address.
     
     .Example 
-        get-content .\hosts.txt | Hunt-EnvironmentVariable $env:computername -Variable PATH | export-csv envVars.csv -NoTypeInformation
+        get-content .\hosts.txt | Hunt-EnvironmentVariable $env:computername | export-csv envVars.csv -NoTypeInformation
     
      .Notes 
-        Updated: 2017-08-27
+        Updated: 2017-09-14
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -35,45 +35,91 @@ Function Hunt-EnvironmentVariable() {
 
 	PARAM(
 		[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
-        $Variable        
+        $Fails
 	);
 
     BEGIN{
 
-            $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
-            Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
+        $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
+        Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
 
-            $stopwatch = New-Object System.Diagnostics.Stopwatch;
-            $stopwatch.Start();
+        $stopwatch = New-Object System.Diagnostics.Stopwatch;
+        $stopwatch.Start();
 
-            $total = 0;
+        $total = 0;
+
+        class EnvVariable {
+            [String] $Computer
+            [DateTime] $DateScanned
+            
+            [String] $Name         
+            [String] $UserName
+            [String] $VariableValue
+        };
 	};
 
 
 	PROCESS{
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
-        $Values = $null;
-		$Values = (Get-CimInstance -Class Win32_Environment -ComputerName $Computer -ErrorAction Stop | Where {$_.Name -eq "$Variable"} | select -ExpandProperty VariableValue).Split(';') | Where-Object {$_ -ne ""};
+        $AllVariables = $null;
+		$AllVariables = Get-CimInstance -Class Win32_Environment -ComputerName $Computer -ErrorAction SilentlyContinue;
+        
+        if ($AllVariables) {
 
-		ForEach ($Value in $Values){
-			$Value = $Value.Replace('"',"");
+            $OutputArray = $null;
+            $OutputArray = @();
 
-			if (-not $Value.EndsWith("\")){
-				$Value = $Value + "\";
-			};
+		    ForEach ($Variable in $AllVariables) {
+                $VariableValues = $Variable.VariableValue.Split(";") | Where-Object {$_ -ne ""}
+            
+                Foreach ($VariableValue in $VariableValues) {
+                    $VariableValueSplit = $Variable;
+                    $VariableValueSplit.VariableValue = $VariableValue;
+                
+                    $output = $null;
+		            $output = [EnvVariable]::new();
+   
+                    $output.Computer = $Computer;
+                    $output.DateScanned = Get-Date -Format u;
 
-			$output = $null;
-            $output = New-Object PSObject;
-			$output | Add-Member NoteProperty Host ($Computer);
-			$output | Add-Member NoteProperty Variable ($Variable);
-            $output | Add-Member NoteProperty Value ($Value);
+                    $output.Name = $VariableValueSplit.Name;
+                    $output.UserName = $VariableValueSplit.UserName;
+                    $output.VariableValue = $VariableValueSplit.VariableValue;
 
-			Write-Output $output;
-			$output.PsObject.Members.Remove('*');
-		};
+                    $elapsed = $stopwatch.Elapsed;
+                    $total = $total+1;               
+
+                    $OutputArray += $output;
+
+                };
+		    };
+
+            $elapsed = $stopwatch.Elapsed;
+            $total = $total+1;
+
+            return $OutputArray;
+        }
+
+        else { # System was not reachable
+
+            if ($Fails) { # -Fails switch was used
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+
+            else{ # -Fails switch not used
+                            
+                $output = $null;
+                $output = [EnvVariable]::new();
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+
+                $total = $total+1;
+                return $output;
+            };
+        };
 	};
 
     END{
