@@ -4,7 +4,7 @@ Function Hunt-EnvironmentVariable() {
         Retreives the values of a specified environment variable from one or more systems.
     
     .Description
-    	Retreives the values of a specified environment variable from one or more systems.
+        Retreives the values of a specified environment variable from one or more systems.
     
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
@@ -29,14 +29,16 @@ Function Hunt-EnvironmentVariable() {
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-	[cmdletbinding()]
 
-	PARAM(
+    [cmdletbinding()]
+
+
+    PARAM(
         [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-	);
+    );
 
     BEGIN{
 
@@ -56,10 +58,10 @@ Function Hunt-EnvironmentVariable() {
             [String] $UserName
             [String] $VariableValue
         };
-	};
+    };
 
 
-	PROCESS{
+    PROCESS{
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
         $AllVariables = $null;
@@ -93,7 +95,7 @@ Function Hunt-EnvironmentVariable() {
                     $OutputArray += $output;
 
                 };
-	        };
+            };
 
             $elapsed = $stopwatch.Elapsed;
             $total = $total+1;
@@ -118,7 +120,7 @@ Function Hunt-EnvironmentVariable() {
                 return $output;
             };
         };
-	};
+    };
 
     END{
         $elapsed = $stopwatch.Elapsed;
