@@ -4,7 +4,8 @@ FUNCTION Hunt-SCCMEnvironments {
     Queries SCCM for a given hostname, FQDN, or IP address.
 
 .Description 
-    Queries SCCM for a given hostname, FQDN, or IP address.
+    Queries SCCM for a given hostname, FQDN, or IP address. 
+    !!WARNING: Long VariableValues vay be truncated using SCCM as a source!!
 
 .Parameter Computer  
     Computer can be a single hostname, FQDN, or IP address.
