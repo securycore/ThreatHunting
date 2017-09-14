@@ -26,7 +26,7 @@ FUNCTION Hunt-SCCMEnvironments {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMEnvironments
 
 .Notes 
-    Updated: 2017-09-05
+    Updated: 2017-09-14
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
