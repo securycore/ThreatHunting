@@ -26,7 +26,7 @@ FUNCTION Hunt-SCCMEnvironments {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMEnvironments
 
 .Notes 
-    Updated: 2017-09-05
+    Updated: 2017-09-14
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ FUNCTION Hunt-SCCMEnvironments {
 #>
 
     PARAM(
-    	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
+        [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
@@ -53,7 +53,7 @@ FUNCTION Hunt-SCCMEnvironments {
         [switch]$CIM
     );
 
-	BEGIN{
+    BEGIN{
         $SCCMNameSpace="root\sms\site_$SiteName";
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
@@ -75,7 +75,7 @@ FUNCTION Hunt-SCCMEnvironments {
             [String] $Description
             [String] $Timestamp
         };
-	}
+    }
 
     PROCESS{        
                 
@@ -117,10 +117,10 @@ FUNCTION Hunt-SCCMEnvironments {
             $SMS_G_System_ENVIRONMENT | ForEach-Object {
                 
                 $output = $null;
-				$output = [Environment]::new();
+                $output = [Environment]::new();
    
                 $output.Computer = $ThisComputer;
-				$output.DateScanned = Get-Date -Format u;
+                $output.DateScanned = Get-Date -Format u;
 
                 $output.ResourceNames = $SMS_R_System.ResourceNames[0]
                 $output.VariableValue = $_.VariableValue; # "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" contains remainder of values above 255 characters!
@@ -143,11 +143,11 @@ FUNCTION Hunt-SCCMEnvironments {
         }
         else {
 
-           	$output = $null;
-			$output = [Environment]::new();
-			$output.Computer = $Computer;
-			$output.DateScanned = Get-Date -Format u;
-			
+               $output = $null;
+            $output = [Environment]::new();
+            $output.Computer = $Computer;
+            $output.DateScanned = Get-Date -Format u;
+            
             return $output;
         };
 
@@ -161,7 +161,7 @@ FUNCTION Hunt-SCCMEnvironments {
     END{
         $elapsed = $stopwatch.Elapsed;
         Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
-	};
+    };
 };
 
 
