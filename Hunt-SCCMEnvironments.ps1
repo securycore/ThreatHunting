@@ -26,7 +26,7 @@ FUNCTION Hunt-SCCMEnvironments {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-SCCMEnvironments
 
 .Notes 
-    Updated: 2017-09-14
+    Updated: 2017-09-05
     LEGAL: Copyright (C) 2017  Anthony Phipps
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,7 +84,6 @@ FUNCTION Hunt-SCCMEnvironments {
             $fqdn = [System.Net.Dns]::GetHostByAddress($Computer).Hostname;
             $ThisComputer = $fqdn.Split(".")[0];
         }
-        
         else{ # Convert any FQDN into just hostname
             
             $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
@@ -139,23 +138,21 @@ FUNCTION Hunt-SCCMEnvironments {
 
 
                 return $output;
+            
             };
         }
         else {
 
-               $output = $null;
+            $output = $null;
             $output = [Environment]::new();
             $output.Computer = $Computer;
             $output.DateScanned = Get-Date -Format u;
             
+            $elapsed = $stopwatch.Elapsed;
+            $total = $total+1;
+           
             return $output;
         };
-
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
-            
-        Write-Verbose -Message "System $total `t $ThisComputer `t Time Elapsed: $elapsed";
-
     };
 
     END{
@@ -163,5 +160,3 @@ FUNCTION Hunt-SCCMEnvironments {
         Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
     };
 };
-
-
