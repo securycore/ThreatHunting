@@ -1,4 +1,4 @@
-Function Hunt-EnvironmentVariables() {
+Function Hunt-EnvironmentVariables {
     <#
     .Synopsis 
         Retreives the values of all environment variables from one or more systems.
