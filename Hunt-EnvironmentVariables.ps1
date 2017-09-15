@@ -1,4 +1,4 @@
-Function Hunt-EnvironmentVariable() {
+Function Hunt-EnvironmentVariables() {
     <#
     .Synopsis 
         Retreives the values of all environment variables from one or more systems.
@@ -10,10 +10,10 @@ Function Hunt-EnvironmentVariable() {
         Computer can be a single hostname, FQDN, or IP address.
     
     .Example 
-        get-content .\hosts.txt | Hunt-EnvironmentVariable $env:computername | export-csv envVars.csv -NoTypeInformation
+        get-content .\hosts.txt | Hunt-EnvironmentVariables $env:computername | export-csv envVars.csv -NoTypeInformation
     
      .Notes 
-        Updated: 2017-09-14
+        Updated: 2017-09-15
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -87,10 +87,7 @@ Function Hunt-EnvironmentVariable() {
 
                     $output.Name = $VariableValueSplit.Name;
                     $output.UserName = $VariableValueSplit.UserName;
-                    $output.VariableValue = $VariableValueSplit.VariableValue;
-
-                    $elapsed = $stopwatch.Elapsed;
-                    $total = $total+1;               
+                    $output.VariableValue = $VariableValueSplit.VariableValue;         
 
                     $OutputArray += $output;
 
