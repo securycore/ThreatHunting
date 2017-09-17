@@ -25,7 +25,7 @@ Function Get-WinEventXMLData {
         Get-WinEvent -FilterhashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"} -MaxEvents 10 | Get-WinEventData | Select-Object *
 
     .NOTES
-        Updated: 2017-08-31
+        Updated: 2017-09-17
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -44,29 +44,25 @@ Function Get-WinEventXMLData {
         Computers
     #>
 
-    [cmdletbinding()]
-    param(
-        [Parameter(Mandatory=$true,
-                   ValueFromPipeline=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ValueFromRemainingArguments=$false,
-                   Position=0 )]
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true,
+            ValueFromRemainingArguments = $false,
+            Position = 0 )]
         [System.Diagnostics.Eventing.Reader.EventLogRecord[]]
         $Event
-    )
+    );
 
-    Process
-    {
-        #Loop through provided events
+    Process {
+
         Foreach-Object {
 
             $output = $_;
                     
             $EventXML = [xml]$_.ToXml();
-
-            # Add custom fields from XML
-            
-            # If event is a recognizable AppLocker event
+           
             if ($EventXML.Event.UserData.RuleAndFileData) {
                 $EventXMLFields = $EventXML.Event.UserData.RuleAndFileData | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
 
