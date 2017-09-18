@@ -1,4 +1,4 @@
-Function Get-WinEventXMLData {
+Function Add-WinEventXMLData {
     <#
     .SYNOPSIS
         Get AppLocker custom event data from an event log record
@@ -22,7 +22,8 @@ Function Get-WinEventXMLData {
         System.Diagnostics.Eventing.Reader.EventLogRecord
     
     .EXAMPLE
-        Get-WinEvent -FilterhashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"} -MaxEvents 10 | Get-WinEventData | Select-Object *
+        Get-WinEvent -FilterhashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"} -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
+        Get-WinEvent -FilterHashtable @{Logname="System" } -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
 
     .NOTES
         Updated: 2017-09-17
@@ -64,10 +65,39 @@ Function Get-WinEventXMLData {
             $EventXML = [xml]$_.ToXml();
            
             if ($EventXML.Event.UserData.RuleAndFileData) {
+
+                Write-Verbose "Event Type: AppLocker";
                 $EventXMLFields = $EventXML.Event.UserData.RuleAndFileData | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
 
                 $EventXMLFields | ForEach-Object {
-                    $output | Add-Member –MemberType NoteProperty –Name $_.Name -Value $EventXML.Event.UserData.RuleAndFileData.($_.Name);
+                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.RuleAndFileData.($_.Name);
+                };
+            }
+            elseif ($EventXML.Event.UserData.CbsPackageInitiateChanges) {
+                
+                Write-Verbose "Event Type: Setup";
+                $EventXMLFields = $EventXML.Event.UserData.CbsPackageInitiateChanges | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name; ;
+
+                $EventXMLFields | ForEach-Object {
+                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageInitiateChanges.($_.Name);
+                };
+            }
+            elseif ($EventXML.Event.UserData.CbsPackageChangeState) {
+                
+                Write-Verbose "Event Type: Setup";
+                $EventXMLFields = $EventXML.Event.UserData.CbsPackageChangeState | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
+
+                $EventXMLFields | ForEach-Object {
+                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageChangeState.($_.Name);
+                };
+            }
+            elseif ($EventXML.Event.EventData.Data[0].Name) {
+                
+                Write-Verbose "Event Type: Generic";
+                $EventXMLFields = $EventXML.Event.EventData.Data;
+
+                For ( $i = 0; $i -lt $EventXMLFields.count; $i++ ) {
+                    $output | Add-Member -MemberType NoteProperty -Name $EventXMLFields[$i].Name -Value $EventXMLFields[$i].'#text' -Force;
                 };
             };
 
