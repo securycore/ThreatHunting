@@ -4,15 +4,11 @@ Function Add-WinEventXMLData {
         Get AppLocker custom event data from an event log record
     
     .DESCRIPTION
-        Get custom event data from an event log record (currently only supports AppLocker)
+        Get custom event data from an event log record
         Takes in Event Log entries from Get-WinEvent, converts each to XML, extracts all properties and adds them to the event object.
-        Notes:
-            Some events store custom data in other XML nodes.
-            For example, AppLocker uses Event.UserData.RuleAndFileData
-            Others use Event.EventData.Data
     
     .PARAMETER Event
-        One or more event.
+        One or more events.
         Accepts data from Get-WinEvent or any System.Diagnostics.Eventing.Reader.EventLogRecord object
     
     .INPUTS
