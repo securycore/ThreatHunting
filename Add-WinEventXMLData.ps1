@@ -1,10 +1,10 @@
 Function Add-WinEventXMLData {
     <#
     .SYNOPSIS
-        Get AppLocker custom event data from an event log record
+        Add XML fields to an event log record.
     
     .DESCRIPTION
-        Get custom event data from an event log record
+        Add XML fields to an event log record.
         Takes in Event Log entries from Get-WinEvent, converts each to XML, extracts all properties and adds them to the event object.
     
     .PARAMETER Event
@@ -54,50 +54,47 @@ Function Add-WinEventXMLData {
 
     Process {
 
-        Foreach-Object {
-
-            $output = $_;
+        $output = $_;
                     
-            $EventXML = [xml]$_.ToXml();
+        $EventXML = [xml]$_.ToXml();
            
-            if ($EventXML.Event.UserData.RuleAndFileData) {
+        if ($EventXML.Event.UserData.RuleAndFileData) {
 
-                Write-Verbose "Event Type: AppLocker";
-                $EventXMLFields = $EventXML.Event.UserData.RuleAndFileData | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
+            Write-Verbose "Event Type: AppLocker";
+            $EventXMLFields = $EventXML.Event.UserData.RuleAndFileData | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
 
-                $EventXMLFields | ForEach-Object {
-                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.RuleAndFileData.($_.Name);
-                };
-            }
-            elseif ($EventXML.Event.UserData.CbsPackageInitiateChanges) {
-                
-                Write-Verbose "Event Type: Setup";
-                $EventXMLFields = $EventXML.Event.UserData.CbsPackageInitiateChanges | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name; ;
-
-                $EventXMLFields | ForEach-Object {
-                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageInitiateChanges.($_.Name);
-                };
-            }
-            elseif ($EventXML.Event.UserData.CbsPackageChangeState) {
-                
-                Write-Verbose "Event Type: Setup";
-                $EventXMLFields = $EventXML.Event.UserData.CbsPackageChangeState | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
-
-                $EventXMLFields | ForEach-Object {
-                    $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageChangeState.($_.Name);
-                };
-            }
-            elseif ($EventXML.Event.EventData.Data[0].Name) {
-                
-                Write-Verbose "Event Type: Generic";
-                $EventXMLFields = $EventXML.Event.EventData.Data;
-
-                For ( $i = 0; $i -lt $EventXMLFields.count; $i++ ) {
-                    $output | Add-Member -MemberType NoteProperty -Name $EventXMLFields[$i].Name -Value $EventXMLFields[$i].'#text' -Force;
-                };
+            $EventXMLFields | ForEach-Object {
+                $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.RuleAndFileData.($_.Name);
             };
+        }
+        elseif ($EventXML.Event.UserData.CbsPackageInitiateChanges) {
+                
+            Write-Verbose "Event Type: Setup";
+            $EventXMLFields = $EventXML.Event.UserData.CbsPackageInitiateChanges | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name; ;
 
-            Return $output;
+            $EventXMLFields | ForEach-Object {
+                $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageInitiateChanges.($_.Name);
+            };
+        }
+        elseif ($EventXML.Event.UserData.CbsPackageChangeState) {
+                
+            Write-Verbose "Event Type: Setup";
+            $EventXMLFields = $EventXML.Event.UserData.CbsPackageChangeState | Get-Member | Where-Object {$_.Membertype -eq "Property"} |  Select-Object Name;
+
+            $EventXMLFields | ForEach-Object {
+                $output | Add-Member -MemberType NoteProperty -Name $_.Name -Value $EventXML.Event.UserData.CbsPackageChangeState.($_.Name);
+            };
+        }
+        elseif ($EventXML.Event.EventData.Data[0].Name) {
+                
+            Write-Verbose "Event Type: Generic";
+            $EventXMLFields = $EventXML.Event.EventData.Data;
+
+            For ( $i = 0; $i -lt $EventXMLFields.count; $i++ ) {
+                $output | Add-Member -MemberType NoteProperty -Name $EventXMLFields[$i].Name -Value $EventXMLFields[$i].'#text' -Force;
+            };
         };
+
+        Return $output;
     };
 };
