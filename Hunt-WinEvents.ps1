@@ -1,10 +1,10 @@
-FUNCTION Hunt-AppLockerEvents {
+FUNCTION Hunt-WinEvents {
     <#
     .Synopsis 
-        Gets AppLocker Events 8002, 8003, and 8004 from a given system.
+        Gets Windows events from one or more systems.
 
     .Description 
-        Gets AppLocker Events 8002, 8003, and 8004 from a given system.
+        Gets Windows events from one or more systems.
 
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
@@ -12,21 +12,22 @@ FUNCTION Hunt-AppLockerEvents {
     .Parameter Fails  
         Provide a path to save failed systems to.
 
-    .Parameter WEC
-        Identify the destination host is a Windows Event Collector. This changes where to pull events from (ForwardedEvents).
-
     .Example 
-        Hunt-AppLockerEvents
-        Hunt-AppLockerEvents SomeHostName.domain.com
-        Hunt-AppLockerEvents | Get-WinEventXMLData
-        Get-Content C:\hosts.csv | Hunt-AppLockerEvents
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-AppLockerEvents
+        Hunt-WinEvents -FilterHashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"}
+        Hunt-WinEvents -FilterHashTable @{LogName="Windows PowerShell"; StartTime=(Get-Date).AddDays(-8); EndTime=(Get-Date)} 
+        Hunt-WinEvents SomeHostName.domain.com
+        Get-Content C:\hosts.txt | Hunt-WinEvents
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-WinEvents
+
+    .Example
+        Pull AppLocker Events from a Windows Event Collector:
+        Hunt-WinEvents -FilterHashTable @{LogName="ForwardedEvents"; ID="8002","8003","8004"}
 
     .Notes
         To extract XML data, use another script like Get-WinEventXMLData
-            https://github.com/TonyPhipps/CM-TH/blob/master/Get-WinEventXMLData.ps1
+            https://github.com/DLACERT/ThreatHunting/blob/master/Add-WinEventXMLData.ps1
      
-        Updated: 2017-08-31
+        Updated: 2017-09-20
         LEGAL: Copyright (C) 2017  Anthony Phipps
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -42,15 +43,15 @@ FUNCTION Hunt-AppLockerEvents {
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
+    [CmdletBinding()]
     PARAM(
     	    [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
             $Computer = $env:COMPUTERNAME,
             [Parameter()]
-            [Switch]
-            $WEC,
+            [array]
+            $FilterHashTable = @{LogName="Windows PowerShell"; StartTime=(Get-Date).AddDays(-8);},
             [Parameter()]
             $Fails
-
         );
 
 	BEGIN{
@@ -62,29 +63,22 @@ FUNCTION Hunt-AppLockerEvents {
             $stopwatch.Start();
 
             $total = 0;
-
 	    };
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-            
-        if ($WEC){
-            $Events = Get-WinEvent -ComputerName $Computer -FilterHashTable @{LogName="ForwardedEvents"; ID="8002","8003","8004"};
-        }
-        else {
-            $Events = Get-WinEvent -ComputerName $Computer -FilterHashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"};
-        };
+
+        $Events = Get-WinEvent -ComputerName $Computer -FilterHashTable $FilterHashTable;
 
         if ($Events) {
-
 
             $Events |
                 Foreach-Object {
 
                     $output = $_;
-                    $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
-                    $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+                    $output | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
+                    $output | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
 
                     Return $output;
                 };
@@ -99,10 +93,10 @@ FUNCTION Hunt-AppLockerEvents {
                             
                 $output = $null;
                 $output = [PSCustomObject]@{};
-                $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
-                $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+                $output | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
+                $output | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
 
-                return $output;
+                Return $output;
             };
         };
          
