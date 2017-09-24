@@ -1,4 +1,4 @@
-﻿FUNCTION xGet-ActivePorts {
+﻿FUNCTION Hunt-ActivePorts {
     <#
     .Synopsis 
         Gets the active ports for the given computer(s).

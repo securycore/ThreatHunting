@@ -85,7 +85,7 @@
                 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.Status = $dnsRecord.status;
+                $output.Status = $dnsRecord.status;# need to fix conversion from text to digit
                 $output.DataLength = $dnsRecord.dataLength;
                 $output.RecordResponse = $dnsRecord.section;
                 $output.TTL = $dnsRecord.TimeToLive;

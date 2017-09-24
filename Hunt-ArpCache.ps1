@@ -1,4 +1,4 @@
-﻿FUNCTION xGet-ArpCache {
+﻿FUNCTION Hunt-ArpCache {
     <#
     .Synopsis 
         Gets the arp cache for the given computer(s).
@@ -13,11 +13,11 @@
         Provide a path to save failed systems to.
 
     .Example 
-        xGet-ArpCache 
-        xGet-ArpCache SomeHostName.domain.com
-        Get-Content C:\hosts.csv | xGet-ArpCache
-        xGet-ArpCache -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | xGet-ArpCache
+        Hunt-ArpCache 
+        Hunt-ArpCache  SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-ArpCache
+        Hunt-ArpCache -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ArpCache
 
     .Notes 
         Updated: 2017-08-31
