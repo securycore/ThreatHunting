@@ -56,7 +56,7 @@
         {
             [Datetime] $DateScanned
             [string] $Computer
-            [string] $Status
+            [uint32] $Status
             [String] $DataLength
             [String] $RecordResponse
             [String] $TTL
@@ -85,14 +85,14 @@
                 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.Status = $dnsRecord.status;# need to fix conversion from text to digit
+                $output.Status = $dnsRecord.status;
                 $output.DataLength = $dnsRecord.dataLength;
                 $output.RecordResponse = $dnsRecord.section;
                 $output.TTL = $dnsRecord.TimeToLive;
-                $output.RecordType = $dnsRecord.RecordType;
-                $output.Record = $dnsCache.data;
+                $output.RecordType = $dnsRecord.Type;
+                $output.Record = $dnsRecord.data;
                 $output.Entry = $dnsRecord.entry;
-                $output.RecordName = $dnsRecord.RecordName;                 
+                $output.RecordName = $dnsRecord.Name;                 
 
                 $OutputArray += $output
             
