@@ -18,7 +18,15 @@ Function Add-WinEventXMLData {
         System.Diagnostics.Eventing.Reader.EventLogRecord
     
     .EXAMPLE
+        Get Windows Applocker events and XML fields.
         Get-WinEvent -FilterhashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"} -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
+
+    .EXAMPLE
+        Get Windows Sysmon events and XML fields.
+        Get-WinEvent -filterhashtable @{logname="Microsoft-Windows-Sysmon/Operational"} | Add-WinEventXMLData | Select-Object *;
+
+    .EXAMPLE
+        Get Windows System logs and XML fields.
         Get-WinEvent -FilterHashtable @{Logname="System" } -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
 
     .NOTES
