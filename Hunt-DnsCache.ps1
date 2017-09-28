@@ -52,21 +52,54 @@
         $stopwatch.Start();
         $total = 0;
 
+        enum recordType
+        {
+           A = 1
+           NS = 2
+           CNAME = 5
+           SOA = 6
+           WKS = 11
+           PTR = 12
+           HINFO = 13
+           MINFO = 14
+           MX = 15
+           TXT = 16
+           AAAA = 28
+           SRV = 33
+           ALL = 255
+        
+        }
+
+        enum recordStatus
+        {
+            Success = 0
+            NotExist = 9003
+            NoRecords = 9501
+        
+        }
+
+        enum recordResponse
+        {
+            Question = 0
+            Answer = 1
+            Authority = 2
+            Additional = 3
+        }
+
         class DNSCache
         {
             [Datetime] $DateScanned
             [string] $Computer
-            [uint32] $Status
+            [recordStatus] $Status
             [String] $DataLength
-            [String] $RecordResponse
+            [recordresponse] $RecordResponse
             [String] $TTL
-            [String] $RecordType            
+            [RecordType] $RecordType            
             [String] $Record
             [string] $Entry
             [string] $RecordName
-
         };
-	};
+    };
 
     PROCESS{
             
