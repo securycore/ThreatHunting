@@ -64,7 +64,7 @@
         $installedSoft = $null;
         foreach ($key in $UninstallKey){
 
-            $installedSoft += $installedSoft = Invoke-Command -ScriptBlock {Get-ItemProperty ('HKLM:\' + "$key" + '\*') -ErrorAction Stop}; # get current uninstallkey properties 
+            $installedSoft += $installedSoft = Invoke-Command -Computer $Computer -ScriptBlock {Get-ItemProperty ('HKLM:\' + "$key" + '\*') -ErrorAction Stop}; # get current uninstallkey properties 
        
         }
 
