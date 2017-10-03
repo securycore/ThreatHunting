@@ -68,7 +68,6 @@ FUNCTION Hunt-SharePermissions {
         {
             [String] $Computer
             [Datetime] $DateScanned
-            [String] $ComputerName
             [String] $Name
             [String] $Path
             [String] $Description
@@ -129,7 +128,7 @@ FUNCTION Hunt-SharePermissions {
 
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
-                    $output.ComputerName = $Share.PSComputerName;
+                    $output.Computer = $Share.PSComputerName;
                     $output.Name = $Share.Name;
                     $output.Path = $Share.Path;
                     $output.Description = $Share.Description;
