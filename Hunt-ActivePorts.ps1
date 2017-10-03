@@ -31,7 +31,6 @@
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
         GNU General Public License for more details.
-
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
@@ -76,7 +75,7 @@
         $Host = $Host.Replace('"', '');  # get rid of quotes, if present
        
         $activePorts = $null
-        $activePorts = Invoke-Command -ScriptBlock {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established')}} -ErrorAction Stop; # get network adapters 
+        $activePorts = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established')}} -ErrorAction Stop; # get network adapters 
         $OutputArray = @();
         
         if ($activePorts) { 
@@ -85,11 +84,11 @@
                 $output = $null
                 $output = [ActivePorts]::new();
 
-                $process = Invoke-Command -ScriptBlock {Get-Process | Where-Object {$_.id -eq $port.owningProcess}} | Select-Object * -ErrorAction Stop;
+                $process = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-Process | Where-Object {$_.id -eq $port.owningProcess} -ErrorAction Stop}
                 
                 try
                 {                    
-                    $remoteDNS = Invoke-Command -ScriptBlock {Resolve-DnsName $port.remoteaddress -ErrorAction Stop}
+                    $remoteDNS = Invoke-Command -ComputerName $Computer -ScriptBlock {Resolve-DnsName $port.remoteaddress -ErrorAction Stop}
                 
                 }catch [System.Exception]{
 
