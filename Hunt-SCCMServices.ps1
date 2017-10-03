@@ -43,7 +43,7 @@ FUNCTION Hunt-SCCMServices {
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Host = $env:COMPUTERNAME,
+        $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $SiteName="A1",
         [Parameter()]
@@ -64,7 +64,7 @@ FUNCTION Hunt-SCCMServices {
         $total = 0;
 
         class Service {
-			[String] $Host
+			[String] $Computer
 			[Datetime] $DateScanned
 			[String] $ResourceNames
 			[String] $AcceptPause
@@ -94,15 +94,15 @@ FUNCTION Hunt-SCCMServices {
 
     PROCESS{        
                 
-        if ($Host -match "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"){ # is this an IP address?
+        if ($Computer -match "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"){ # is this an IP address?
             
-            $fqdn = [System.Net.Dns]::GetHostByAddress($Host).Hostname;
+            $fqdn = [System.Net.Dns]::GetHostByAddress($Computer).Computername;
             $ThisComputer = $fqdn.Split(".")[0];
         }
         
         else{ # Convert any FQDN into just hostname
             
-            $ThisComputer = $Host.Split(".")[0].Replace('"', '');
+            $ThisComputer = $Computer.Split(".")[0].Replace('"', '');
         };
 
         if ($CIM){
@@ -136,7 +136,7 @@ FUNCTION Hunt-SCCMServices {
 				$output = $null;
 				$output = [Service]::new();
 				
-				$output.Host = $ThisComputer;
+				$output.Computer = $ThisComputer;
 				$output.DateScanned = Get-Date -Format u;
                 
 				$output.ResourceNames = $SMS_R_System.ResourceNames[0];
@@ -170,7 +170,7 @@ FUNCTION Hunt-SCCMServices {
 			
 			$output = $null;
 			$output = [Service]::new();
-			$output.Host = $Host;
+			$output.Computer = $Computer;
 			$output.DateScanned = Get-Date -Format u;
 			
             return $output;
