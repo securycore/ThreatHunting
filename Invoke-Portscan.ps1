@@ -55,8 +55,6 @@ FUNCTION Invoke-PortScan {
 
             $stopwatch = New-Object System.Diagnostics.Stopwatch;
             $stopwatch.Start();
-
-            $total = 0;
 	    };
 
     PROCESS{
@@ -65,7 +63,6 @@ FUNCTION Invoke-PortScan {
             [String] $Computer
             [DateTime] $DateScanned
 
-            [String] $ComputerName
             [String] $RemoteAddress
             [String] $RemotePort
             [String] $TCPTestSucceeded
