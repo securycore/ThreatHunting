@@ -1,21 +1,13 @@
 FUNCTION Hunt-Services {
 <#
 .Synopsis 
-    Queries SCCM for a given hostname, FQDN, or IP address.
+    Queries the services on a given hostname, FQDN, or IP address.
 
 .Description 
-    Queries SCCM for a given hostname, FQDN, or IP address.
+    Queries the services on a given hostname, FQDN, or IP address.
 
 .Parameter Computer  
-    Computer can be a single hostname, FQDN, or IP address.
-
-.Parameter CIM
-    Use Get-CIMInstance rather than Get-WMIObject. CIM cmdlets use WSMAN (WinRM)
-    to connect to remote machines, and has better standardized output (e.g. 
-    datetime format). CIM cmdlets require the querying user to be a member of 
-    Administrators or WinRMRemoteWMIUsers_ on the target system. Get-WMIObject 
-    is the default due to lower permission requirements, but can be blocked by 
-    firewalls in some environments.
+    Queries the services on a given hostname, FQDN, or IP address.
 
 .Example 
     Hunt-Services 
