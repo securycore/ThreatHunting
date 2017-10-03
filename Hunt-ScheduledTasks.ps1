@@ -61,7 +61,7 @@ FUNCTION Hunt-ScheduledTasks {
 
         $Tasks = $null;
                         
-		$Tasks = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-ScheduledTask | Select *} -ErrorAction SilentlyContinue;
+		$Tasks = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-ScheduledTask | Select-Object *} -ErrorAction SilentlyContinue;
             
         if ($Tasks) {
 
