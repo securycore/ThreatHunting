@@ -38,7 +38,7 @@
 
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
-        $Computer = $env:COMPUTERNAME,
+        $Host = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
     )
@@ -55,7 +55,7 @@
         class ActivePorts
         {
             [Datetime] $DateScanned
-            [String] $Computer
+            [String] $Host
             [String] $LocalAddress
             [String] $LocalPort
             [String] $RemoteDNS
@@ -73,7 +73,7 @@
 
     PROCESS{
             
-        $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
+        $Host = $Host.Replace('"', '');  # get rid of quotes, if present
        
         $activePorts = $null
         $activePorts = Invoke-Command -ScriptBlock {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established')}} -ErrorAction Stop; # get network adapters 
@@ -98,7 +98,7 @@
                 }               
 
                 $output.DateScanned = Get-Date -Format u;
-                $output.Computer = $Computer;
+                $output.Host = $Host;
                 $output.LocalAddress = $port.localAddress;
                 $output.LocalPort = $port.localPort;
                 $output.RemoteAddress = $port.remoteAddress;
@@ -121,14 +121,14 @@
             if ($Fails) {
 
                 # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer") 
+                Add-Content -Path $Fails -Value ("$Host") 
             
             }else{ 
 
                 # -Fails switch not used            
                 $output = $null;
                 $output = [Activeports]::new();
-                $output.Computer = $Computer;
+                $output.Host = $Host;
                 $output.DateScanned = Get-Date -Format u;
 
                 return $output;
