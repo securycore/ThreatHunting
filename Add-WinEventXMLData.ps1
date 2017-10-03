@@ -19,15 +19,32 @@ Function Add-WinEventXMLData {
     
     .EXAMPLE
         Get Windows Applocker events and XML fields.
-        Get-WinEvent -FilterhashTable @{LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004"} -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
+        Get-WinEvent -FilterhashTable @{ LogName="Microsoft-Windows-AppLocker/EXE and DLL"; ID="8002","8003","8004" } -MaxEvents 10 | 
+            Add-WinEventXMLData | 
+            Select-Object *;
 
     .EXAMPLE
         Get Windows Sysmon events and XML fields.
-        Get-WinEvent -filterhashtable @{logname="Microsoft-Windows-Sysmon/Operational"} | Add-WinEventXMLData | Select-Object *;
+        Get-WinEvent -filterhashtable @{ LogName="Microsoft-Windows-Sysmon/Operational" } | 
+            Add-WinEventXMLData | 
+            Select-Object *;
+        
+        Or from a WEF/WEC:
+        Get-WinEvent -ComputerName WEFSERVER -FilterHashtable @{ LogName="ForwardedEvents"; Id=1; StartTime=(Get-Date).AddDays(-2) } -MaxEvents 10 | 
+            Where-Object {  $_.LogName -eq "Microsoft-Windows-Sysmon/Operational" } | 
+            Add-WinEventXMLData | 
+            Select-Object *;
 
     .EXAMPLE
         Get Windows System logs and XML fields.
-        Get-WinEvent -FilterHashtable @{Logname="System" } -MaxEvents 10 | Add-WinEventXMLData | Select-Object *;
+        Get-WinEvent -FilterHashtable @{ LogName="System" } -MaxEvents 10 | 
+            Add-WinEventXMLData | 
+            Select-Object *;
+
+    .EXAMPLE    
+        Get-WinEvent -FilterHashtable @{ LogName="ForwardedEvents" } -MaxEvents 10 | 
+            Add-WinEventXMLData | 
+            Select-Object *;
 
     .NOTES
         Updated: 2017-09-17
