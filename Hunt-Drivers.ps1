@@ -72,7 +72,7 @@ FUNCTION Hunt-Drivers {
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         $OutputArray = @();
         $drivers = $null;
-        $drivers = Invoke-Command -ScriptBlock {Get-WindowsDriver -Online -ErrorAction SilentlyContinue}; # get list of drivers
+        $drivers = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-WindowsDriver -Online -ErrorAction SilentlyContinue}; # get list of drivers
        
         if ($drivers) { 
           
