@@ -41,19 +41,24 @@
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
-        
         $UninstallKey="SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-                      "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" 
+                      "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"; 
 
         $stopwatch = New-Object System.Diagnostics.Stopwatch;
         $stopwatch.Start();
         $total = 0;
+
+        class InstalledSoftware
+        {
+            [datetime]$datescanned
+            [string]$Computer
+        };
 
     };
 
@@ -62,9 +67,10 @@
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
        
         $installedSoft = $null;
+        
         foreach ($key in $UninstallKey){
 
-            $installedSoft += $installedSoft = Invoke-Command -Computer $Computer -ScriptBlock {Get-ItemProperty ('HKLM:\' + "$key" + '\*') -ErrorAction Stop}; # get current uninstallkey properties 
+            $installedSoft += $installedSoft = Invoke-Command -Computer $Computer -ScriptBlock {Get-ItemProperty ('HKLM:\' + "$key" + '\*') -ErrorAction SilentlyContinue}; # get current uninstallkey properties 
        
         }
 
@@ -79,7 +85,7 @@
 
             $installedSoft = $installedSoft | Select-Object -Property Publisher, DisplayName, DisplayVersion, InstallDate,
                 InstallSource, InstallLocation, pschildname, HelpLink |
-                    Sort-Object -Property Displayname
+                    Sort-Object -Property Displayname;
         
 
         Return $installedSoft;
@@ -95,13 +101,16 @@
 
                 # -Fails switch not used            
                 $output = $null;
-                $output = [DNSCache]::new();
+                $output = [InstalledSoftware]::new();
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-                return $output;
+            return $output;
+
             };
+
         };
+
     };
 
     END{
@@ -109,5 +118,7 @@
         $total = $total+1;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
+
 	};
+
 };

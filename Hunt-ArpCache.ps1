@@ -41,7 +41,7 @@
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
@@ -64,15 +64,17 @@
             [String] $PolicyStore
 
         };
+
 	};
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-       
-        $interfaces = $null
-        $interfaces = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetAdapter | Where-Object {$_.MediaConnectionState -eq 'Connected'} -ErrorAction Stop}; # get connected network adapters 
         $OutputArray = @();
+        $interfaces = $null;
+        $interfaces = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetAdapter |
+            Where-Object {$_.MediaConnectionState -eq 'Connected'} -ErrorAction SilentlyContinue}; # get connected network adapters 
+        
         
         if ($interfaces) { 
           
@@ -80,14 +82,14 @@
              
                 $arpTable = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetNeighbor |
                     Where-Object {$_.ifIndex -eq $interface.ifIndex -and $_.State -ne 'Permanent'}} |
-                        Where-Object {$_.state -eq 'Unreachable'} | Test-Connection -Count 1 -Quiet ; #test unreachable connections
+                        Where-Object {$_.state -eq 'Unreachable'} | Test-Connection -Count 1 -Quiet; #test unreachable connections
                 
                 $arpTable = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetNeighbor |
                     Where-Object {$_.ifIndex -eq $interface.ifIndex -and $_.State -ne 'Permanent'}} |
                          Select-Object *; # grab the arp table again after unreachables have been tested
     
                     foreach ($arpRecord in $arpTable) {
-                        $output = $null
+                        $output = $null;
                         $output = [ArpCache]::new();
                 
                         $output.DateScanned = Get-Date -Format u;
@@ -99,10 +101,13 @@
                         $output.State = $arpRecord.state;
                         $output.PolicyStore = $arpRecord.store;                 
 
-                    $OutputArray += $output
+                    $OutputArray += $output;
+
                     };
+
             };
-            Return $OutputArray;
+
+        Return $OutputArray;
 
         }Else{# System not reachable
         
@@ -119,9 +124,12 @@
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-                return $output;
             };
+        
+        Return $output;
+
         };
+
     };
 
     END{
@@ -130,4 +138,5 @@
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
 	};
+
 };

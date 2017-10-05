@@ -40,7 +40,7 @@
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
@@ -68,33 +68,34 @@
             [datetime] $ProcessStartTime
 
         };
+
 	};
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-       
-        $activePorts = $null
-        $activePorts = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established')}} -ErrorAction Stop; # get network adapters 
         $OutputArray = @();
+        $activePorts = $null;
+        $activePorts = Invoke-Command -ComputerName $Computer -ScriptBlock `
+            {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established') } -ErrorAction SilentlyContinue}; # get network adapters 
+        
         
         if ($activePorts) { 
           
             foreach ($port in $activePorts) {#loop through the ports and build the custom output
-                $output = $null
+                $output = $null;
                 $output = [ActivePorts]::new();
-
-                $process = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-Process | Where-Object {$_.id -eq $port.owningProcess} -ErrorAction Stop}
+                $process = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-Process | Where-Object {$_.id -eq $port.owningProcess} -ErrorAction SilentlyContinue}; #get process that owns the active port
                 
                 try
                 {                    
-                    $remoteDNS = Invoke-Command -ComputerName $Computer -ScriptBlock {Resolve-DnsName $port.remoteaddress -ErrorAction Stop}
+                    $remoteDNS = Invoke-Command -ComputerName $Computer -ScriptBlock {Resolve-DnsName $port.remoteaddress -ErrorAction Stop}; #resolve the destination IP
                 
                 }catch [System.Exception]{
 
-                    $output.RemoteDNS = $error[0].Exception.Message -split ': ' | Select-Object -Skip 1
+                    $output.RemoteDNS = $error[0].Exception.Message -split ': ' | Select-Object -Skip 1; #Insert no record found if no record is found in the DNS Server
                                                                         
-                }               
+                };               
 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
@@ -107,20 +108,21 @@
                 $output.OwningProcessID = $port.owningProcess;
                 $output.ProcessName = $process.Name;
                 $output.ProcessPath = $process.Path;
-                $output.ProcessStartTime = $process.startTime
+                $output.ProcessStartTime = $process.startTime;
                 If (!$Output.RemoteDNS) {$output.RemoteDNS = $remoteDNS[0].namehost};
 
-                $OutputArray += $output
+                $OutputArray += $output;
+
             };
 
-            Return $OutputArray;
+        Return $OutputArray;
 
         }Else{# System not reachable
         
             if ($Fails) {
 
                 # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer") 
+                Add-Content -Path $Fails -Value ("$Computer");
             
             }else{ 
 
@@ -130,9 +132,12 @@
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-                return $output;
+            return $output;
+
             };
+
         };
+
     };
 
     END{
@@ -140,5 +145,7 @@
         $total = $total+1;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
+
 	};
+
 };

@@ -41,7 +41,7 @@ FUNCTION Hunt-InterfaceDetails {
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
@@ -52,10 +52,10 @@ FUNCTION Hunt-InterfaceDetails {
         $stopwatch.Start();
         $total = 0;
 
-        class Adapter {
+        class Adapter
+        {
             [String] $Computer
             [DateTime] $DateScanned
-            
             [String] $FQDN
             [String] $Description
             [String] $NetConnectionID
@@ -75,27 +75,24 @@ FUNCTION Hunt-InterfaceDetails {
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $Adapters = Get-CimInstance Win32_NetworkAdapter -Computer $Computer | Select-Object * -ErrorAction SilentlyContinue;
-
+        $Adapters = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-CimInstance Win32_NetworkAdapter | Select-Object * -ErrorAction SilentlyContinue}; #get a list of network adapters
+        
         if ($Adapters) {
 
-            $AdapterConfigs = Get-CimInstance Win32_NetworkAdapterConfiguration -Computer $Computer | Select-Object * -ErrorAction SilentlyContinue;
-            
+            $AdapterConfigs = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-CimInstance Win32_NetworkAdapterConfiguration | Select-Object * -ErrorAction SilentlyContinue};  #get the configuration for the current adapter
             $OutputArray = $null;
             $OutputArray = @();
 
-            foreach ($Adapter in $Adapters) {#loop through the Interfaces and build the custom output
+            foreach ($Adapter in $Adapters) {#loop through the Interfaces and build the outputArray
                 
                 if ($Adapter.NetEnabled) {
 
                     $AdapterConfig = $AdapterConfigs | Where {$_.InterfaceIndex -eq $Adapter.InterfaceIndex};
-
                     $output = $null;
 			        $output = [Adapter]::new();
    
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
-                
                     $output.FQDN = $Adapter.SystemName;
                     $output.Description = $Adapter.Description;
                     $output.NetConnectionID = $Adapter.NetConnectionID;
@@ -103,7 +100,6 @@ FUNCTION Hunt-InterfaceDetails {
                     $output.InterfaceIndex = $Adapter.InterfaceIndex;
                     $output.Speed = $Adapter.Speed;
                     $output.MACAddress = $Adapter.MACAddress;
-
                     $output.IPAddress = $AdapterConfig.ipaddress[0];
                     $output.Subnet = $AdapterConfig.IPsubnet[0];
                     $output.Gateway = $AdapterConfig.DefaultIPGateway;
@@ -111,16 +107,14 @@ FUNCTION Hunt-InterfaceDetails {
                     $output.MTU = $AdapterConfig.MTU;
  
                     $OutputArray += $output;
+
                 };
+
             };
 
-            $elapsed = $stopwatch.Elapsed;
-            $total = $total+1;
-
-            Return $OutputArray;
-        }
-        
-        else { # System was not reachable
+        Return $OutputArray;
+            
+        }Else{ # System was not reachable
 
             if ($Fails) { # -Fails switch was used
                 Add-Content -Path $Fails -Value ("$Computer");
@@ -132,16 +126,21 @@ FUNCTION Hunt-InterfaceDetails {
                 $output = [Adapter]::new();
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
+                
+            return $output;
 
-                $total = $total+1;
-                return $output;
             };
+
         };
+
     };
 
     END{
         $elapsed = $stopwatch.Elapsed;
+        $total = $total+1;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
+
 	};
+
 };

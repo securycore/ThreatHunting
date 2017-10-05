@@ -41,7 +41,7 @@
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
@@ -68,7 +68,7 @@
            SRV = 33
            ALL = 255
         
-        }
+        };
 
         enum recordStatus
         {
@@ -76,7 +76,7 @@
             NotExist = 9003
             NoRecords = 9501
         
-        }
+        };
 
         enum recordResponse
         {
@@ -84,7 +84,7 @@
             Answer = 1
             Authority = 2
             Additional = 3
-        }
+        };
 
         class DNSCache
         {
@@ -99,21 +99,21 @@
             [string] $Entry
             [string] $RecordName
         };
+
     };
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-       
-        $dnsCache = $null
-        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-DnsClientCache -ErrorAction Stop}; # get dns cache 
         $OutputArray = @();
-        
+        $dnsCache = $null;
+        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-DnsClientCache -ErrorAction SilentlyContinue}; # get dns cache 
+       
         if ($dnsCache) { 
           
-            foreach ($dnsRecord in $dnsCache) {#loop through each DNS record
+            foreach ($dnsRecord in $dnsCache) {#loop through each DNS record and build outputArray
              
-                $output = $null
+                $output = $null;
                 $output = [DNSCache]::new();
                 
                 $output.DateScanned = Get-Date -Format u;
@@ -127,10 +127,11 @@
                 $output.Entry = $dnsRecord.entry;
                 $output.RecordName = $dnsRecord.Name;                 
 
-                $OutputArray += $output
+                $OutputArray += $output;
             
             };
-            Return $OutputArray;
+
+        Return $OutputArray;
 
         }Else{# System not reachable
         
@@ -147,9 +148,12 @@
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-                return $output;
+            return $output;
+
             };
+
         };
+
     };
 
     END{
@@ -157,5 +161,7 @@
         $total = $total+1;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
+
 	};
+
 };

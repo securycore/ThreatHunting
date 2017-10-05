@@ -41,7 +41,7 @@
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
-    )
+    );
 
 	BEGIN{
 
@@ -52,19 +52,26 @@
         $stopwatch.Start();
         $total = 0;
 
+        class Hotfix
+        {
+
+            [datetime]$datescanned
+            [string]$Computer
+        
+        };
+
     };
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-       
         $Hotfixes = $null;
-        $Hotfixes = Invoke-Command -Computer $Computer -ScriptBlock {Get-HotFix -ErrorAction Stop}; # get current installed hotfixes 
+        $Hotfixes = Invoke-Command -Computer $Computer -ScriptBlock {Get-HotFix -ErrorAction SilentlyContinue}; # get current installed hotfixes 
       
 
         if ($Hotfixes) { 
           
-            foreach ($hotfix in $Hotfixes) {#loop through each record
+            foreach ($hotfix in $Hotfixes) {#loop through each hotfix
              
                 $hotfix | Add-Member -NotePropertyName DateScanned -NotePropertyValue $(Get-Date -Format u);
                 $hotfix | Add-Member -NotePropertyName Computer -NotePropertyValue $($Computer);
@@ -86,13 +93,16 @@
 
                 # -Fails switch not used            
                 $output = $null;
-                $output = [DNSCache]::new();
+                $output = [Hotfix]::new();
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-                return $output;
+            return $output;
+
             };
+
         };
+
     };
 
     END{
@@ -100,5 +110,7 @@
         $total = $total+1;
 
         Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
+
 	};
+
 };
