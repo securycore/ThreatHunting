@@ -1,29 +1,30 @@
 function Hunt-ADS {
     <#
     .SYNOPSIS 
-        Gets the processes applied to a given system.
+        Performs a search for alternate data streams (ADS) on a system.
 
     .DESCRIPTION 
-        Gets the processes applied to a given system, including usernames.
+        Performs a search for alternate data streams (ADS) on a system. Default starting directory is c:\temp.
+        To test, perform the following steps first:
+        $file = "C:\temp\testfile.txt";
+        Set-Content -Path $file -Value 'Nobody here but us chickens!';
+        Add-Content -Path $file -Value 'Super secret squirrel stuff' -Stream 'secretStream';
 
     .PARAMETER Computer  
         Computer can be a single hostname, FQDN, or IP address.
 
-    .PARAMETER Services  
-        Includes Services associated with each Process ID. Slows processing per system by a small amount while service are pulled.
-
-    .PARAMETER DLLs  
-        Includes DLLs associated with each Process ID. Note that DLLs cannot be pulled on remote systems due to lack of support in Get-Process.
+    .PARAMETER Path  
+        Specify a path to search for alternate data streams in. Default is c:\temp
 
     .PARAMETER Fails  
         Provide a path to save failed systems to.
 
     .EXAMPLE 
-        Hunt-ADS 
-        Hunt-ADS SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-ADS
-        Hunt-ADS $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ADS
+        Hunt-ADS -Path "C:\"
+        Hunt-ADS SomeHostName.domain.com -Path "C:\"
+        Get-Content C:\hosts.csv | Hunt-ADS -Path "C:\"
+        Hunt-ADS $env:computername -Path "C:\"
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ADS -Path "C:\"
 
     .NOTES 
         Updated: 2017-10-06
@@ -83,12 +84,8 @@ function Hunt-ADS {
 
         $Computer = $Computer.Replace('"', '');
 
+        Write-Verbose "Attemting to run Invoke-Command on remote system.";
         $Streams = $null;
-        
-        Write-Verbose "Attempting Get-ChildItem";
-
-        $OldErrorActionPreference = $ErrorActionPreference;
-        $ErrorActionPreference = "SilentlyContinue";
 
         $Streams = Invoke-Command -ArgumentList $Path -ComputerName $Computer -ScriptBlock {
             $Path = $args[0];
@@ -107,14 +104,11 @@ function Hunt-ADS {
                 $Stream | Add-Member -MemberType NoteProperty -Name StreamContent -Value $StreamContent;
             };
 
-            Return $Streams;
+            return $Streams;
         };
-
-        $ErrorActionPreference = $OldErrorActionPreference;
         
         if ($Streams) {
-            Write-Verbose "Streams exists";
-
+            Write-Verbose "Streams were found.";
 
             $OutputArray = $null;
             $OutputArray = @();
