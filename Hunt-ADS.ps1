@@ -48,7 +48,7 @@ function Hunt-ADS {
         $Computer = $env:COMPUTERNAME,
 
         [Parameter()]
-        $Path = "C:\users",
+        $Path = "C:\temp",
 
         [Parameter()]
         $Fails
@@ -72,6 +72,10 @@ function Hunt-ADS {
             [String] $StreamName
             [String] $StreamLength
             [String] $StreamContent
+            [DateTime] $CreationTimeUtc
+            [DateTime] $LastAccessTimeUtc
+            [DateTime] $LastWriteTimeUtc
+
         };
     };
 
@@ -89,30 +93,33 @@ function Hunt-ADS {
         $Streams = Invoke-Command -ArgumentList $Path -ComputerName $Computer -ScriptBlock {
             $Path = $args[0];
 
-            Get-ChildItem -Path $Path -Recurse -Force -Attributes !Directory -PipelineVariable FullName | 
+            $Streams = Get-ChildItem -Path $Path -Recurse -Force -Attributes !Directory -PipelineVariable FullName | 
             Get-Item -Stream * |
-            Where-Object {($_.Stream -notlike "*DATA") -AND ($_.Stream -ne "Zone.Identifier")}; 
+            Where-Object {($_.Stream -notlike "*DATA") -AND ($_.Stream -ne "Zone.Identifier")};
+
+            ForEach ($Stream in $Streams) {
+                $File = Get-Item $Stream.FileName;
+                $StreamContent = Get-Content -Path $Stream.FileName -Stream $Stream.Stream;
+
+                $Stream | Add-Member -MemberType NoteProperty -Name CreationTimeUtc -Value $File.CreationTimeUtc;
+                $Stream | Add-Member -MemberType NoteProperty -Name LastAccessTimeUtc -Value $File.LastAccessTimeUtc;
+                $Stream | Add-Member -MemberType NoteProperty -Name LastWriteTimeUtc -Value $File.LastWriteTimeUtc;
+                $Stream | Add-Member -MemberType NoteProperty -Name StreamContent -Value $StreamContent;
+            };
+
+            Return $Streams;
         };
 
         $ErrorActionPreference = $OldErrorActionPreference;
         
         if ($Streams) {
-            Write-Output "Streams exists"
+            Write-Verbose "Streams exists";
 
 
             $OutputArray = $null;
             $OutputArray = @();
 
             ForEach ($Stream in $Streams) {
-                $FileName = $Stream.FileName;
-                $StreamName = $Stream.Stream;
-
-                $StreamContent = Invoke-Command -Computer $Computer -ArgumentList $FileName, $StreamName -ScriptBlock {
-                    $FileName = $args[0];
-                    $StreamName = $args[1];
-                    Get-Content -Path $FileName -Stream $StreamName;
-                };
-                            
 
                 $output = $null;
                 $output = [ADS]::new();
@@ -123,7 +130,10 @@ function Hunt-ADS {
                 $output.FileName = $Stream.FileName;
                 $output.StreamName = $Stream.Stream;
                 $output.StreamLength = $Stream.Length;
-                $output.StreamContent = $StreamContent;
+                $output.StreamContent = $Stream.StreamContent;
+                $output.CreationTimeUtc = $Stream.CreationTimeUtc;
+                $output.LastAccessTimeUtc = $Stream.LastAccessTimeUtc;
+                $output.LastWriteTimeUtc = $Stream.LastWriteTimeUtc;
                 
                 $total = $total + 1;
 
