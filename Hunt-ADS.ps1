@@ -89,7 +89,7 @@ function Hunt-ADS {
         $Streams = Invoke-Command -ArgumentList $Path -ComputerName $Computer -ScriptBlock {
             $Path = $args[0];
 
-            Get-ChildItem -Path $Path -Recurse -Force -Attributes !Directory -PipelineVariable PSPath | 
+            Get-ChildItem -Path $Path -Recurse -Force -Attributes !Directory -PipelineVariable FullName | 
             Get-Item -Stream * |
             Where-Object {($_.Stream -notlike "*DATA") -AND ($_.Stream -ne "Zone.Identifier")}; 
         };
@@ -111,7 +111,7 @@ function Hunt-ADS {
                     $FileName = $args[0];
                     $StreamName = $args[1];
                     Get-Content -Path $FileName -Stream $StreamName;
-                } -ArgumentList $FileName, $StreamName;
+                };
                             
 
                 $output = $null;
@@ -121,8 +121,8 @@ function Hunt-ADS {
                 $output.DateScanned = Get-Date -Format u;
 
                 $output.FileName = $Stream.FileName;
-                $output.StreamName = $Stream.StreamName;
-                $output.StreamLength = $Stream.StreamLength;
+                $output.StreamName = $Stream.Stream;
+                $output.StreamLength = $Stream.Length;
                 $output.StreamContent = $StreamContent;
                 
                 $total = $total + 1;
