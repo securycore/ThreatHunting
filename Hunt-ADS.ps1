@@ -73,6 +73,7 @@ function Hunt-ADS {
             [String] $StreamName
             [String] $StreamLength
             [String] $StreamContent
+            [String] $Attributes
             [DateTime] $CreationTimeUtc
             [DateTime] $LastAccessTimeUtc
             [DateTime] $LastWriteTimeUtc
@@ -90,18 +91,20 @@ function Hunt-ADS {
         $Streams = Invoke-Command -ArgumentList $Path -ComputerName $Computer -ScriptBlock {
             $Path = $args[0];
 
-            $Streams = Get-ChildItem -Path $Path -Recurse -Force -Attributes !Directory -PipelineVariable FullName | 
-            Get-Item -Stream * |
+            $Streams = Get-ChildItem -Path $Path -Recurse -PipelineVariable FullName | 
+            foreach { Get-Item $_.FullName -Stream * } | # Doesn't work without foreach
             Where-Object {($_.Stream -notlike "*DATA") -AND ($_.Stream -ne "Zone.Identifier")};
 
             ForEach ($Stream in $Streams) {
                 $File = Get-Item $Stream.FileName;
                 $StreamContent = Get-Content -Path $Stream.FileName -Stream $Stream.Stream;
+                $Attributes = Get-ItemProperty -Path $Stream.FileName;
 
                 $Stream | Add-Member -MemberType NoteProperty -Name CreationTimeUtc -Value $File.CreationTimeUtc;
                 $Stream | Add-Member -MemberType NoteProperty -Name LastAccessTimeUtc -Value $File.LastAccessTimeUtc;
                 $Stream | Add-Member -MemberType NoteProperty -Name LastWriteTimeUtc -Value $File.LastWriteTimeUtc;
                 $Stream | Add-Member -MemberType NoteProperty -Name StreamContent -Value $StreamContent;
+                $Stream | Add-Member -MemberType NoteProperty -Name Attributes -Value $Attributes.Mode;
             };
 
             return $Streams;
@@ -124,6 +127,7 @@ function Hunt-ADS {
                 $output.FileName = $Stream.FileName;
                 $output.StreamName = $Stream.Stream;
                 $output.StreamLength = $Stream.Length;
+                $output.Attributes = $Stream.Attributes;
                 $output.StreamContent = $Stream.StreamContent;
                 $output.CreationTimeUtc = $Stream.CreationTimeUtc;
                 $output.LastAccessTimeUtc = $Stream.LastAccessTimeUtc;
