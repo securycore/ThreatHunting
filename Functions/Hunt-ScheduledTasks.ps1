@@ -68,8 +68,8 @@ FUNCTION Hunt-ScheduledTasks {
             $Tasks |
                 ForEach-Object {
                     
-                    $_ | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
-                    $_ | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+                    $_ | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
+                    $_ | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
 
                     $_ | Add-Member -MemberType NoteProperty -Name ActionsId -Value ($_.Actions.Id -join "; ");
                     $_ | Add-Member -MemberType NoteProperty -Name ActionsArguments -Value ($_.Actions.Arguments -join "; ");
@@ -96,8 +96,8 @@ FUNCTION Hunt-ScheduledTasks {
                             
                 $output = $null;
                 $output = [PSCustomObject]@{};
-                $output | Add-Member –MemberType NoteProperty –Name Computer -Value $Computer;
-                $output | Add-Member –MemberType NoteProperty –Name DateScanned -Value (Get-Date -Format u);
+                $output | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
+                $output | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
 
                 return $output;
             };
