@@ -2,6 +2,9 @@
 
 ## Installation
 
+Before installation, unblocking the downloaded files may be required.
+`Get-ChildItem *.ps* -Recurse | Unblock-File`
+
 ### Option 1: Install at the System Level
 Copy the project folder to `%Windir%\System32\WindowsPowerShell\v1.0\Modules\`
 
