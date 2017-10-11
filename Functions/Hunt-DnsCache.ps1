@@ -20,8 +20,12 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-DNSCache
 
     .Notes 
-        Updated: 2017-08-31
-        LEGAL: Copyright (C) 2017  Jeremy Arnold
+        Updated: 2017-10-10
+
+        Contributing Authors:
+            Jeremy Arnold
+            
+        LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or

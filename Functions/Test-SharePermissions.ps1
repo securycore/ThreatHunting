@@ -14,8 +14,12 @@ Function Test-SharePermissions {
 		Import-Csv c:\temp\shares.csv | ForEach-Object {"\\{0}\{1}\" -f $_.ComputerName, $_.Name} | Test-SharePermissions
 	
 	.Notes 
-	 Updated: 2017-09-18
-	 LEGAL: Copyright (C) 2017  Anthony Phipps
+	Updated: 2017-10-10
+
+        Contributing Authors:
+            Anthony Phipps
+            
+        LEGAL: Copyright (C) 2017
 	 This program is free software: you can redistribute it and/or modify
 	 it under the terms of the GNU General Public License as published by
 	 the Free Software Foundation, either version 3 of the License, or

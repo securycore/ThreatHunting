@@ -27,8 +27,12 @@ function Hunt-ADS {
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ADS -Path "C:\"
 
     .NOTES 
-        Updated: 2017-10-06
-        LEGAL: Copyright (C) 2017  Anthony Phipps
+        Updated: 2017-10-10
+
+        Contributing Authors:
+            Anthony Phipps
+            
+        LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
