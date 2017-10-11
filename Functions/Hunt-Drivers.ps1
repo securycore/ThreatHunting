@@ -19,9 +19,14 @@ FUNCTION Hunt-Drivers {
         Hunt-Drivers -Computer $env:computername
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Drivers
 
-    .Notes 
-        Updated: 2017-08-31
-        LEGAL: Copyright (C) 2017  Jeremy Arnold
+    .Notes
+        Updated: 2017-10-10
+
+        Contributing Authors:
+            Jeremy Arnold
+            Anthony Phipps
+            
+        LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -52,7 +57,7 @@ FUNCTION Hunt-Drivers {
         $stopwatch.Start();
         $total = 0;
 
-        class Drivers
+        class Driver
         {
             [Datetime] $DateScanned
             [string] $Computer
@@ -76,10 +81,10 @@ FUNCTION Hunt-Drivers {
        
         if ($drivers) { 
           
-            foreach ($driver in $drivers) {#loop through each DNS record and build outputArray
+            foreach ($driver in $drivers) {
              
                 $output = $null;
-                $output = [Drivers]::new();
+                $output = [Driver]::new();
                 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
@@ -95,37 +100,41 @@ FUNCTION Hunt-Drivers {
             
             };
 
-        Return $OutputArray | Sort-Object -Property date -Descending;
-
-        }Else{# System not reachable
+            Return $OutputArray | Sort-Object -Property date -Descending;
         
-            if ($Fails) {
-
-                # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer");
+        }
+        else {
             
-            }else{ 
-
-                # -Fails switch not used            
+            Write-Verbose "System unreachable.";
+            if ($Fails) {
+                
+                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else {
+                
+                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [Drivers]::new();
+                $output = [Driver]::new();
+
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-            return $output;
-
+                return $output;
             };
-
         };
+        
+        $elapsed = $stopwatch.Elapsed;
+        $total = $total + 1;
+        
+        Write-Verbose "System $total `t $ThisComputer `t Total Time Elapsed: $elapsed";
 
     };
 
-    END{
+    END {
+
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-
-	};
-
+        Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
+    };
 };
