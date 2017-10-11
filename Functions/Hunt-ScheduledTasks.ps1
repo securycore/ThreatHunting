@@ -57,6 +57,30 @@ FUNCTION Hunt-ScheduledTasks {
 
         $total = 0;
 
+        class Task {
+            [String] $Computer
+            [DateTime] $DateScanned
+
+            [String] $ActionsArguments
+            [String] $ActionsExecute
+            [String] $ActionsId
+            [String] $ActionsWorkingDirectory
+            [String] $Author
+            [String] $Description
+            [String] $SecurityDescriptor
+            [String] $Source
+            [String] $State
+            [String] $TaskName
+            [String] $TaskPath
+            [String] $TriggersDelay
+            [String] $TriggersEnabled
+            [String] $TriggersEndBoundary
+            [String] $TriggersExecutionTimeLimit
+            [String] $TriggersPSComputerName
+            [String] $TriggersRepetition
+            [String] $TriggersStartBoundary
+            [String] $URI
+        }
 	}
 
     PROCESS{
@@ -69,54 +93,69 @@ FUNCTION Hunt-ScheduledTasks {
             
         if ($Tasks) {
 
-            $Tasks |
-                ForEach-Object {
-                    
-                    $_ | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
-                    $_ | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
+            $Tasks | ForEach-Object {
 
-                    $_ | Add-Member -MemberType NoteProperty -Name ActionsId -Value ($_.Actions.Id -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name ActionsArguments -Value ($_.Actions.Arguments -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name ActionsExecute -Value ($_.Actions.Execute -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name ActionsWorkingDirectory -Value ($_.Actions.WorkingDirectory -join "; ");
+                $output = $null;
+                $output = [Task]::new();
 
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersEnabled -Value ($_.Triggers.Enabled -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersEndBoundary -Value ($_.Triggers.EndBoundary -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersExecutionTimeLimit -Value ($_.Triggers.ExecutionTimeLimit -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersRepetition -Value ($_.Triggers.Repetition -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersStartBoundary -Value ($_.Triggers.StartBoundary -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersDelay -Value ($_.Triggers.Delay -join "; ");
-                    $_ | Add-Member -MemberType NoteProperty -Name TriggersPSComputerName -Value ($_.Triggers.PSComputerName -join "; ");
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
 
-                    return $_;
+                $output.ActionsArguments = ($_.Actions.Arguments -join "; ");
+                $output.ActionsExecute = ($_.Actions.Execute -join "; ");
+                $output.ActionsId = ($_.Actions.Id -join "; ");
+                $output.ActionsWorkingDirectory = ($_.Actions.WorkingDirectory -join "; ");
+                $output.Author = $_.Author;
+                $output.Description = $_.Description;
+                $output.SecurityDescriptor = $_.SecurityDescriptor;
+                $output.Source = $_.Source;
+                $output.State = $_.State;
+                $output.TaskName = $_.TaskName;
+                $output.TaskPath = $_.TaskPath;
+                $output.TriggersDelay = ($_.Triggers.Delay -join "; ");
+                $output.TriggersEnabled = ($_.Triggers.Enabled -join "; ");
+                $output.TriggersEndBoundary = ($_.Triggers.EndBoundary -join "; ");
+                $output.TriggersExecutionTimeLimit = ($_.Triggers.ExecutionTimeLimit -join "; ");
+                $output.TriggersPSComputerName = ($_.Triggers.PSComputerName -join "; ");
+                $output.TriggersRepetition = ($_.Triggers.Repetition -join "; ");
+                $output.TriggersStartBoundary = ($_.Triggers.StartBoundary -join "; ");
+                $output.URI = $_.URI;
+
+                return $output;
             };
         }
-        else { # System was not reachable
-
-            if ($Fails) { # -Fails switch was used
+        else {
+            
+            Write-Verbose "System unreachable.";
+            if ($Fails) {
+                
+                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
                 Add-Content -Path $Fails -Value ("$Computer");
             }
-            else{ # -Fails switch not used
-                            
+            else {
+                
+                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [PSCustomObject]@{};
-                $output | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
-                $output | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
+                $output = [Task]::new();
+
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
 
                 return $output;
             };
         };
-         
+        
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
-            
-        Write-Information -MessageData "System $total `t $ThisComputer `t Time Elapsed: $elapsed" -InformationAction Continue;
+        $total = $total + 1;
+        
+        Write-Verbose "System $total `t $ThisComputer `t Total Time Elapsed: $elapsed";
 
     };
 
-    END{
+    END {
+
         $elapsed = $stopwatch.Elapsed;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-	};
+        Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
+    };
 };
