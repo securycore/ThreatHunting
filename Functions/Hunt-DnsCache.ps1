@@ -24,6 +24,7 @@
 
         Contributing Authors:
             Jeremy Arnold
+            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -50,7 +51,7 @@
 	BEGIN{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
-        Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
+        Write-Verbose ("Started at {0}" -f $datetime);
 
         $stopwatch = New-Object System.Diagnostics.Stopwatch;
         $stopwatch.Start();
@@ -71,7 +72,6 @@
            AAAA = 28
            SRV = 33
            ALL = 255
-        
         };
 
         enum recordStatus
@@ -79,7 +79,6 @@
             Success = 0
             NotExist = 9003
             NoRecords = 9501
-        
         };
 
         enum recordResponse
@@ -92,8 +91,9 @@
 
         class DNSCache
         {
-            [Datetime] $DateScanned
             [string] $Computer
+            [Datetime] $DateScanned
+
             [recordStatus] $Status
             [String] $DataLength
             [recordresponse] $RecordResponse
@@ -103,25 +103,29 @@
             [string] $Entry
             [string] $RecordName
         };
-
     };
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $OutputArray = @();
+        
+        Write-Verbose ("{0}: Querying remote system" -f $Computer); 
         $dnsCache = $null;
-        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-DnsClientCache -ErrorAction SilentlyContinue}; # get dns cache 
+        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-DnsClientCache -ErrorAction SilentlyContinue};
        
         if ($dnsCache) { 
-          
-            foreach ($dnsRecord in $dnsCache) {#loop through each DNS record and build outputArray
+            
+            $OutputArray = @();
+
+            Write-Verbose ("{0}: Looping through retrived results" -f $Computer);
+            foreach ($dnsRecord in $dnsCache) {
              
                 $output = $null;
                 $output = [DNSCache]::new();
                 
-                $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+
                 $output.Status = $dnsRecord.status;
                 $output.DataLength = $dnsRecord.dataLength;
                 $output.RecordResponse = $dnsRecord.section;
@@ -132,40 +136,42 @@
                 $output.RecordName = $dnsRecord.Name;                 
 
                 $OutputArray += $output;
-            
             };
 
-        Return $OutputArray;
-
-        }Else{# System not reachable
-        
-            if ($Fails) {
-
-                # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer");
+            $elapsed = $stopwatch.Elapsed;
+            $total = $total + 1;
             
-            }else{ 
+            Write-Verbose ("System {0} complete: `t {1} `t Total Time Elapsed: $elapsed" -f $total, $Computer, $elapsed);
 
-                # -Fails switch not used            
+            Return $OutputArray;
+
+        }
+        else {
+            
+            Write-Verbose "System unreachable.";
+            if ($Fails) {
+                
+                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else {
+                
+                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
                 $output = [DNSCache]::new();
+
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
 
-            return $output;
-
+                return $output;
             };
-
         };
-
     };
 
-    END{
+    END {
+
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-
-	};
-
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };
