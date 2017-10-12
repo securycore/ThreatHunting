@@ -64,7 +64,7 @@ FUNCTION Hunt-Drivers {
             [string] $Provider
             [string] $Driver
             [String] $Version
-            [datetime] $date
+            [datetime] $Date
             [String] $Class
             [string] $DriverSigned
             [string] $OrginalFileName
