@@ -1,10 +1,10 @@
-FUNCTION Hunt-Drivers {
+﻿FUNCTION Hunt-InstalledHardware {
     <#
     .Synopsis 
-        Gets a list of drivers for the given computer(s).
+        Gets a list of installed devices for the given computer(s).
 
     .Description 
-        Gets a list of drivers for the given computer(s).
+        Gets a list of installed devices for the given computer(s).
 
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
@@ -13,18 +13,17 @@ FUNCTION Hunt-Drivers {
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-Drivers 
-        Hunt-Drivers SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-Drivers
-        Hunt-Drivers -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Drivers
+        Hunt-InstalledHardware 
+        Hunt-InstalledHardware SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-InstalledHardware
+        Hunt-InstalledHardware -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-InstalledHardware
 
     .Notes
-        Updated: 2017-10-10
+        Updated: 2017-10-12
 
         Contributing Authors:
             Jeremy Arnold
-            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -57,17 +56,15 @@ FUNCTION Hunt-Drivers {
         $stopwatch.Start();
         $total = 0;
 
-        class Driver
+        class Device
         {
             [Datetime] $DateScanned
             [string] $Computer
-            [string] $Provider
-            [string] $Driver
-            [String] $Version
-            [datetime] $Date
             [String] $Class
-            [string] $DriverSigned
-            [string] $OrginalFileName
+            [string] $Caption
+            [string] $Description
+            [String] $DeviceID
+
         };
 
     };
@@ -77,30 +74,28 @@ FUNCTION Hunt-Drivers {
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         $OutputArray = @();
         $drivers = $null;
-        $drivers = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-WindowsDriver -Online -ErrorAction SilentlyContinue}; # get list of drivers
+        Write-Verbose "Getting a list of installed devices..."
+        $devices = Invoke-Command -Computer $Computer -ScriptBlock {Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue};
        
-        if ($drivers) { 
-          
-            foreach ($driver in $drivers) {
+        if ($devices) { 
+            $deviceClassArray = $devices | Group-Object pnpclass | Select-Object Name, Count | Sort-Object name;
+            foreach ($device in $devices) {
              
                 $output = $null;
-                $output = [Driver]::new();
+                $output = [Device]::new();
                 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.Provider = $driver.ProviderName;
-                $output.Driver = $driver.Driver;
-                $output.Version = $driver.Version;
-                $output.date = $driver.Date;
-                $output.Class = $driver.ClassDescription;
-                $output.DriverSigned = $driver.DriverSignature;
-                $output.OrginalFileName = $driver.OriginalFileName;
+                $output.Class = $device.pnpclass;
+                $output.caption = $device.caption;
+                $output.description = $device.description;
+                $output.deviceID = $device.deviceID;
 
                 $OutputArray += $output;
             
             };
 
-            Return $OutputArray | Sort-Object -Property date -Descending;
+            Return $OutputArray;
         
         }
         else {
@@ -115,7 +110,7 @@ FUNCTION Hunt-Drivers {
                 
                 Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [Driver]::new();
+                $output = [Device]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

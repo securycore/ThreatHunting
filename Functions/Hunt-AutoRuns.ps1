@@ -1,10 +1,10 @@
-FUNCTION Hunt-Drivers {
+﻿FUNCTION Hunt-AutoRuns {
     <#
     .Synopsis 
-        Gets a list of drivers for the given computer(s).
+        Gets a list of programs that auto start for the given computer(s).
 
     .Description 
-        Gets a list of drivers for the given computer(s).
+        Gets a list of programs that auto start for the given computer(s).
 
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
@@ -13,18 +13,17 @@ FUNCTION Hunt-Drivers {
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-Drivers 
-        Hunt-Drivers SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-Drivers
-        Hunt-Drivers -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Drivers
+        Hunt-AutoRuns 
+        Hunt-AutoRuns SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-AutoRuns
+        Hunt-AutoRuns -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-AutoRuns
 
     .Notes
-        Updated: 2017-10-10
+        Updated: 2017-10-12
 
         Contributing Authors:
             Jeremy Arnold
-            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -57,17 +56,15 @@ FUNCTION Hunt-Drivers {
         $stopwatch.Start();
         $total = 0;
 
-        class Driver
+        class AutoRuns
         {
             [Datetime] $DateScanned
             [string] $Computer
-            [string] $Provider
-            [string] $Driver
-            [String] $Version
-            [datetime] $Date
-            [String] $Class
-            [string] $DriverSigned
-            [string] $OrginalFileName
+            [String] $User
+            [string] $Caption
+            [string] $Command
+            [String] $RegistryLocation
+                        
         };
 
     };
@@ -76,31 +73,28 @@ FUNCTION Hunt-Drivers {
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         $OutputArray = @();
-        $drivers = $null;
-        $drivers = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-WindowsDriver -Online -ErrorAction SilentlyContinue}; # get list of drivers
+        $autoRun = $null;
+        Write-Verbose "Getting a list of AutoRuns..."
+        $autoRun = Invoke-Command -Computer $Computer -ScriptBlock {Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue};
        
-        if ($drivers) { 
-          
-            foreach ($driver in $drivers) {
+        if ($autoRun) { 
+            foreach ($entry in $autoRun) {
              
                 $output = $null;
-                $output = [Driver]::new();
+                $output = [AutoRuns]::new();
                 
                 $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.Provider = $driver.ProviderName;
-                $output.Driver = $driver.Driver;
-                $output.Version = $driver.Version;
-                $output.date = $driver.Date;
-                $output.Class = $driver.ClassDescription;
-                $output.DriverSigned = $driver.DriverSignature;
-                $output.OrginalFileName = $driver.OriginalFileName;
+                $output.User = $entry.user;
+                $output.caption = $entry.caption;
+                $output.command = $entry.command;
+                $output.RegistryLocation = $entry.location;
 
                 $OutputArray += $output;
             
             };
 
-            Return $OutputArray | Sort-Object -Property date -Descending;
+            Return $OutputArray;
         
         }
         else {
@@ -108,14 +102,14 @@ FUNCTION Hunt-Drivers {
             Write-Verbose "System unreachable.";
             if ($Fails) {
                 
-                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                Write-Verbose "-Fails switch activated. Saving system to $Fails.";
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
                 Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [Driver]::new();
+                $output = [AutoRuns]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
