@@ -65,7 +65,7 @@
             [String] $IfIndex
             [string] $InterfaceAlias
             [String] $IPAdress
-            [String] $MAC
+            [String] $LinkLayerAddress
             [String] $State
             [String] $PolicyStore
         };
@@ -77,7 +77,7 @@
         
         
         $arpCache = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock {
-            Get-NetNeighbor | Where-Object {$_.InterfaceAlias -notlike "Loopback*"};
+            Get-NetNeighbor | Where-Object {($_.LinkLayerAddress -ne "") -and ($_.LinkLayerAddress -ne "00-00-00-00-00-00") -and ($_.LinkLayerAddress -ne "FF-FF-FF-FF-FF-FF")}; # filter out loopbacks & broadcasts
         };
         
         
@@ -97,7 +97,7 @@
                 $output.IfIndex = $record.ifIndex;
                 $output.InterfaceAlias = $record.InterfaceAlias;
                 $output.IPAdress = $record.IPAddress;
-                $output.MAC = $record.LinkLayerAddress;
+                $output.LinkLayerAddress = $record.LinkLayerAddress;
                 $output.State = $record.State;
                 $output.PolicyStore = $record.Store;                 
 
