@@ -9,6 +9,9 @@
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
 
+    .Parameter Path
+        Resolve owning PID to process path. Increases hunt time per system.       
+
     .Parameter Fails  
         Provide a path to save failed systems to.
 
@@ -20,10 +23,11 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ActivePorts
 
     .Notes 
-        Updated: 2017-10-10
+        Updated: 2017-10-16
 
         Contributing Authors:
             Jeremy Arnold
+            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -42,6 +46,10 @@
     PARAM(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
+        
+        [Parameter()]
+        [switch] $Path,
+
         [Parameter()]
         $Fails
     );
@@ -55,22 +63,19 @@
         $stopwatch.Start();
         $total = 0;
 
-        class ActivePorts
+        class TCPConnection
         {
-            [Datetime] $DateScanned
             [String] $Computer
+            [DateTime] $DateScanned
+
             [String] $LocalAddress
             [String] $LocalPort
-            [String] $RemoteDNS
             [String] $RemoteAddress
             [String] $RemotePort
             [String] $State
             [String] $AppliedSetting
             [String] $OwningProcessID
-            [String] $ProcessName
-            [String] $ProcessPath
-            [datetime] $ProcessStartTime
-
+            [String] $OwningProcessPath
         };
 
 	};
@@ -78,78 +83,79 @@
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $OutputArray = @();
-        $activePorts = $null;
-        $activePorts = Invoke-Command -ComputerName $Computer -ScriptBlock `
-            {Get-NetTCPConnection | Where-Object {($_.state -eq 'listen') -or ($_.state -eq 'Established') } -ErrorAction SilentlyContinue}; # get network adapters 
         
+        $TCPConnections = $null;
+        $TCPConnections = Invoke-Command -ComputerName $Computer -ScriptBlock {
+            $TCPConnections = Get-NetTCPConnection -State Listen, Established;
+            $TCPConnections | ForEach-Object {
+                $_ | Add-Member -MemberType NoteProperty -Name Path -Value ((Get-Process -Id $_.OwningProcess).Path);
+            }
+
+            return $TCPConnections;
+        };
         
-        if ($activePorts) { 
+        if ($TCPConnections) {
+
+            Write-Verbose ("{0}: Parsing results." -f $Computer);            
+            $OutputArray = @();
           
-            foreach ($port in $activePorts) {#loop through the ports and build the custom output
+            foreach ($TCPConnection in $TCPConnections) {
+
+                $thisPID = $null;
+                $thisPID = $TCPConnection.OwningProcess;
+
                 $output = $null;
-                $output = [ActivePorts]::new();
-                $process = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-Process | Where-Object {$_.id -eq $port.owningProcess} -ErrorAction SilentlyContinue}; #get process that owns the active port
-                
-                try
-                {                    
-                    $remoteDNS = Invoke-Command -ComputerName $Computer -ScriptBlock {Resolve-DnsName $port.remoteaddress -ErrorAction Stop}; #resolve the destination IP
-                
-                }catch [System.Exception]{
+                $output = [TCPConnection]::new();    
 
-                    $output.RemoteDNS = $error[0].Exception.Message -split ': ' | Select-Object -Skip 1; #Insert no record found if no record is found in the DNS Server
-                                                                        
-                };               
-
-                $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.LocalAddress = $port.localAddress;
-                $output.LocalPort = $port.localPort;
-                $output.RemoteAddress = $port.remoteAddress;
-                $output.RemotePort = $port.remoteport;
-                $output.State = $port.state;
-                $output.AppliedSetting = $port.AppliedSetting;
-                $output.OwningProcessID = $port.owningProcess;
-                $output.ProcessName = $process.Name;
-                $output.ProcessPath = $process.Path;
-                $output.ProcessStartTime = $process.startTime;
-                If (!$Output.RemoteDNS) {$output.RemoteDNS = $remoteDNS[0].namehost};
+                $output.DateScanned = Get-Date -Format u;
+                
+                $output.LocalAddress = $TCPConnection.LocalAddress;
+                $output.LocalPort = $TCPConnection.LocalPort;
+                $output.RemoteAddress = $TCPConnection.RemoteAddress;
+                $output.RemotePort = $TCPConnection.RemotePort;
+                $output.State = $TCPConnection.State;
+                $output.AppliedSetting = $TCPConnection.AppliedSetting;
+                $output.OwningProcessID = $TCPConnection.OwningProcess;
+                
+                if ($Path) {
+                    $output.OwningProcessPath = $TCPConnection.Path;
+                };
 
                 $OutputArray += $output;
 
             };
-
+        
+        $total = $total+1;
         Return $OutputArray;
 
-        }Else{# System not reachable
-        
-            if ($Fails) {
-
-                # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer");
+        }
+        else {
             
-            }else{ 
-
-                # -Fails switch not used            
+            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            if ($Fails) {
+                
+                $total = $total+1;
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else {
+                
                 $output = $null;
-                $output = [Activeports]::new();
+                $output = [TCPConnection]::new();
+
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
-            return $output;
-
+                
+                $total = $total+1;
+                return $output;
             };
-
         };
-
     };
 
-    END{
+    end {
+
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-
-	};
-
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };
