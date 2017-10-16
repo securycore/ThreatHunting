@@ -20,10 +20,11 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ArpCache
 
     .Notes 
-        Updated: 2017-10-10
+        Updated: 2017-10-16
 
         Contributing Authors:
             Jeremy Arnold
+            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -58,89 +59,81 @@
 
         class ArpCache
         {
-            [Datetime] $DateScanned
             [string] $Computer
+            [Datetime] $DateScanned
+
             [String] $IfIndex
             [string] $InterfaceAlias
             [String] $IPAdress
             [String] $MAC
             [String] $State
             [String] $PolicyStore
-
         };
-
 	};
 
     PROCESS{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $OutputArray = @();
-        $interfaces = $null;
-        $interfaces = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetAdapter |
-            Where-Object {$_.MediaConnectionState -eq 'Connected'} -ErrorAction SilentlyContinue}; # get connected network adapters 
         
         
-        if ($interfaces) { 
-          
-            foreach ($interface in $interfaces) {#loop through the connected interfaces and get the arp table
-             
-                $arpTable = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetNeighbor |
-                    Where-Object {$_.ifIndex -eq $interface.ifIndex -and $_.State -ne 'Permanent'}} |
-                        Where-Object {$_.state -eq 'Unreachable'} | Test-Connection -Count 1 -Quiet; #test unreachable connections
-                
-                $arpTable = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetNeighbor |
-                    Where-Object {$_.ifIndex -eq $interface.ifIndex -and $_.State -ne 'Permanent'}} |
-                         Select-Object *; # grab the arp table again after unreachables have been tested
-    
-                    foreach ($arpRecord in $arpTable) {
-                        $output = $null;
-                        $output = [ArpCache]::new();
-                
-                        $output.DateScanned = Get-Date -Format u;
-                        $output.Computer = $Computer;
-                        $output.IfIndex = $arpRecord.ifIndex;
-                        $output.InterfaceAlias = $arpRecord.interfaceAlias;
-                        $output.IPAdress = $arpRecord.ipaddress;
-                        $output.MAC = $arpRecord.linklayerAddress;
-                        $output.State = $arpRecord.state;
-                        $output.PolicyStore = $arpRecord.store;                 
-
-                    $OutputArray += $output;
-
-                    };
-
-            };
-
-        Return $OutputArray;
-
-        }Else{# System not reachable
+        $arpCache = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock {
+            Get-NetNeighbor | Where-Object {$_.InterfaceAlias -notlike "Loopback*"};
+        };
         
-            if ($Fails) {
+        
+        if ($arpCache) {
 
-                # -Fails switch was used
-                Add-Content -Path $Fails -Value ("$Computer");
+            Write-Verbose ("{0}: Parsing results." -f $Computer);
+            $OutputArray = @();
             
-            }else{ 
-
-                # -Fails switch not used            
+            foreach ($record in $arpCache) {
+             
                 $output = $null;
                 $output = [ArpCache]::new();
+        
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
+                
+                $output.IfIndex = $record.ifIndex;
+                $output.InterfaceAlias = $record.InterfaceAlias;
+                $output.IPAdress = $record.IPAddress;
+                $output.MAC = $record.LinkLayerAddress;
+                $output.State = $record.State;
+                $output.PolicyStore = $record.Store;                 
 
+                $OutputArray += $output;
             };
-        
-        Return $output;
 
+            $total = $total+1;
+            Return $OutputArray;
+
+        }
+        else {
+            
+            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            if ($Fails) {
+                
+                $total = $total+1;
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else {
+                
+                $output = $null;
+                $output = [ArpCache]::new();
+
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+                
+                $total = $total+1;
+                return $output;
+            };
         };
-
     };
 
-    END{
+    end {
+
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-	};
-
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };
