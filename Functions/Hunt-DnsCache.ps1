@@ -1,4 +1,4 @@
-﻿FUNCTION Hunt-DNSCache {
+﻿function Hunt-DNSCache {
     <#
     .Synopsis 
         Gets the DNS cache for the given computer(s).
@@ -20,7 +20,7 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-DNSCache
 
     .Notes 
-        Updated: 2017-10-10
+        Updated: 2017-10-17
 
         Contributing Authors:
             Jeremy Arnold
@@ -41,14 +41,14 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-    PARAM(
+    param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
     );
 
-	BEGIN{
+	begin{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Verbose ("Started at {0}" -f $datetime);
@@ -57,40 +57,36 @@
         $stopwatch.Start();
         $total = 0;
 
-        enum recordType
-        {
-           A = 1
-           NS = 2
-           CNAME = 5
-           SOA = 6
-           WKS = 11
-           PTR = 12
-           HINFO = 13
-           MINFO = 14
-           MX = 15
-           TXT = 16
-           AAAA = 28
-           SRV = 33
-           ALL = 255
+        enum recordType {
+            A = 1
+            NS = 2
+            CNAME = 5
+            SOA = 6
+            WKS = 11
+            PTR = 12
+            HINFO = 13
+            MINFO = 14
+            MX = 15
+            TXT = 16
+            AAAA = 28
+            SRV = 33
+            ALL = 255
         };
 
-        enum recordStatus
-        {
+        enum recordStatus {
             Success = 0
             NotExist = 9003
             NoRecords = 9501
         };
 
-        enum recordResponse
-        {
+        enum recordResponse {
             Question = 0
             Answer = 1
             Authority = 2
             Additional = 3
         };
 
-        class DNSCache
-        {
+        class DNSCache {
             [string] $Computer
             [Datetime] $DateScanned
 
@@ -98,20 +94,20 @@
             [String] $DataLength
             [recordresponse] $RecordResponse
             [String] $TTL
-            [RecordType] $RecordType            
+            [RecordType] $RecordType
             [String] $Record
             [string] $Entry
             [string] $RecordName
         };
     };
 
-    PROCESS{
+    process{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
         Write-Verbose ("{0}: Querying remote system" -f $Computer); 
         $dnsCache = $null;
-        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-DnsClientCache -ErrorAction SilentlyContinue};
+        $dnsCache = Invoke-Command -ComputerName $Computer -ScriptBlock { Get-DnsClientCache } -ErrorAction SilentlyContinue;
        
         if ($dnsCache) { 
             
@@ -141,34 +137,34 @@
             $elapsed = $stopwatch.Elapsed;
             $total = $total + 1;
             
-            Write-Verbose ("System {0} complete: `t {1} `t Total Time Elapsed: $elapsed" -f $total, $Computer, $elapsed);
+            Write-Verbose ("System {0} complete: `t {1} `t Total Time Elapsed: {2}" -f $total, $Computer, $elapsed);
 
+            $total = $total+1;
             Return $OutputArray;
-
         }
         else {
             
-            Write-Verbose "System unreachable.";
+            Write-Verbose ("{0}: System unreachable." -f $Computer);
             if ($Fails) {
                 
-                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                $total = $total+1;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
-                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
                 $output = [DNSCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
+                
+                $total = $total+1;
                 return $output;
             };
         };
     };
 
-    END {
+    end {
 
         $elapsed = $stopwatch.Elapsed;
 
