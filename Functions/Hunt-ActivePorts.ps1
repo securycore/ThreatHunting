@@ -23,7 +23,7 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ActivePorts
 
     .Notes 
-        Updated: 2017-10-16
+        Updated: 2017-10-17
 
         Contributing Authors:
             Jeremy Arnold
@@ -119,19 +119,14 @@
                 $output.State = $TCPConnection.State;
                 $output.AppliedSetting = $TCPConnection.AppliedSetting;
                 $output.OwningProcessID = $TCPConnection.OwningProcess;
+                $output.OwningProcessPath = $TCPConnection.Path;
                 
-                if ($Path) {
-                    $output.OwningProcessPath = $TCPConnection.Path;
-                };
-
                 $OutputArray += $output;
-
             };
         
         $total = $total+1;
         return $OutputArray;
-
-        }
+        }        
         else {
             
             Write-Verbose ("{0}: System unreachable." -f $Computer);
