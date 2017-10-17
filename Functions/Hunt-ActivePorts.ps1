@@ -1,4 +1,4 @@
-﻿FUNCTION Hunt-ActivePorts {
+﻿function Hunt-ActivePorts {
     <#
     .Synopsis 
         Gets the active ports for the given computer(s).
@@ -43,7 +43,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-    PARAM(
+    param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         
@@ -54,7 +54,7 @@
         $Fails
     );
 
-	BEGIN{
+	begin{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
@@ -77,19 +77,21 @@
             [String] $OwningProcessID
             [String] $OwningProcessPath
         };
-
 	};
 
-    PROCESS{
+    process{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
         $TCPConnections = $null;
         $TCPConnections = Invoke-Command -ComputerName $Computer -ScriptBlock {
             $TCPConnections = Get-NetTCPConnection -State Listen, Established;
-            $TCPConnections | ForEach-Object {
-                $_ | Add-Member -MemberType NoteProperty -Name Path -Value ((Get-Process -Id $_.OwningProcess).Path);
-            }
+            
+            if ($using:Path) {
+                $TCPConnections | ForEach-Object {
+                    $_ | Add-Member -MemberType NoteProperty -Name Path -Value ((Get-Process -Id $_.OwningProcess).Path);
+                };
+            };
 
             return $TCPConnections;
         };
@@ -127,7 +129,7 @@
             };
         
         $total = $total+1;
-        Return $OutputArray;
+        return $OutputArray;
 
         }
         else {
