@@ -1,28 +1,28 @@
 ﻿function Hunt-ActivePorts {
     <#
-    .Synopsis 
+    .Synopsis
         Gets the active ports for the given computer(s).
 
-    .Description 
+    .Description
         Gets the active ports for the given computer(s) and returns a PS Object.
 
-    .Parameter Computer  
+    .Parameter Computer
         Computer can be a single hostname, FQDN, or IP address.
 
     .Parameter Path
         Resolve owning PID to process path. Increases hunt time per system.       
 
-    .Parameter Fails  
+    .Parameter Fails
         Provide a path to save failed systems to.
 
-    .Example 
+    .Example
         Hunt-ActivePorts 
         Hunt-ActivePorts SomeHostName.domain.com
         Get-Content C:\hosts.csv | Hunt-ActivePorts
         Hunt-ActivePorts -Computer $env:computername
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ActivePorts
 
-    .Notes 
+    .Notes
         Updated: 2017-10-17
 
         Contributing Authors:
@@ -103,11 +103,8 @@
           
             foreach ($TCPConnection in $TCPConnections) {
 
-                $thisPID = $null;
-                $thisPID = $TCPConnection.OwningProcess;
-
                 $output = $null;
-                $output = [TCPConnection]::new();    
+                $output = [TCPConnection]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
