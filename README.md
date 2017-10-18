@@ -16,3 +16,7 @@ Copy the project folder to `$home\Documents\WindowsPowerShell\Modules\`
 To only use the scripts during the current powershell session, use
 
 `Import-Module .\ThreatHunting.psm1`
+
+### Contact
+CERTAnalysisMitigation@dla.mil
+CERT@dla.mil
