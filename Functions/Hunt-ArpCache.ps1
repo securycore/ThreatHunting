@@ -79,10 +79,9 @@
         $arpCache = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock {
             Get-NetNeighbor | 
             Where-Object {($_.LinkLayerAddress -ne "") -and
-                ($_.LinkLayerAddress -ne "00-00-00-00-00-00") -and # loopback ## not all 00-00-00-00-00-00 are loopbacks, some have just fell out of the arp cache and need a simple ping to repopulate the cache/MAC
-                ($_.LinkLayerAddress -ne "FF-FF-FF-FF-FF-FF") -and # broadcast ## Use $_.state -ne 'permanant' will filter all broadcast and multicast
-                ($_.LinkLayerAddress -notlike "01-00-5E-*") -and   # IPv4 multicast ## Use $_.state -ne 'permanant' will filter all broadcast and multicast
-                ($_.LinkLayerAddress -notlike "33-33-*")           # IPv6 multicast ## Use $_.state -ne 'permanant' will filter all broadcast and multicast
+                ($_.LinkLayerAddress -ne "FF-FF-FF-FF-FF-FF") -and # Broadcast. Filtered by LinkLayerAddress rather than "$_.State -ne "permanent" to maintain manual entries
+                ($_.LinkLayerAddress -notlike "01-00-5E-*") -and   # IPv4 multicast
+                ($_.LinkLayerAddress -notlike "33-33-*")           # IPv6 multicast
             };
         };
         
