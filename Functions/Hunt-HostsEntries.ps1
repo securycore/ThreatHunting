@@ -122,7 +122,7 @@ function Hunt-HostsEntries {
         }
         else {
             
-            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
                 $total++;
@@ -131,7 +131,7 @@ function Hunt-HostsEntries {
             else {
                 
                 $output = $null;
-                $output = [Entry]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

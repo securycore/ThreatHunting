@@ -125,21 +125,21 @@ function Hunt-RecycleBin {
         }
         else {
             
-            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
-                $total = $total+1;
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
                 $output = $null;
-                $output = [DeletedItem]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
                 
-                $total = $total+1;
+                $total++;
                 return $output;
             };
         };

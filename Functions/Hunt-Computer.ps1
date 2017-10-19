@@ -236,19 +236,21 @@ Function Hunt-Computer {
         }
         else {
             
-            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
                 $output = $null;
-                $output = [Computer]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
+                
+                $total++;
                 return $output;
             };
         };

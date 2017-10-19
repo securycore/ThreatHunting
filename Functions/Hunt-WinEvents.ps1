@@ -87,35 +87,32 @@ FUNCTION Hunt-WinEvents {
                     Return $output;
                 };
         }
-
-        else { # System was not reachable
-
-            if ($Fails) { # -Fails switch was used
+        else {
+            
+            Write-Verbose ("{0}: System failed." -f $Computer);
+            if ($Fails) {
+                
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
-            else{ # -Fails switch not used
-                            
+            else {
+                
                 $output = $null;
-                $output = [PSCustomObject]@{};
-                $output | Add-Member -MemberType NoteProperty -Name Computer -Value $Computer;
-                $output | Add-Member -MemberType NoteProperty -Name DateScanned -Value (Get-Date -Format u);
+                $output = [ArpCache]::new();
 
-                Return $output;
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+                
+                $total++;
+                return $output;
             };
         };
-         
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
-            
-        Write-Information -MessageData "System $total `t $ThisComputer `t Time Elapsed: $elapsed" -InformationAction Continue;
-
     };
 
-    END{
+    end {
+
         $elapsed = $stopwatch.Elapsed;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-	};
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };
-
-

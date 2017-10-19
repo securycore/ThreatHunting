@@ -1,4 +1,4 @@
-﻿FUNCTION Hunt-ArpCache {
+﻿function Hunt-ArpCache {
     <#
     .Synopsis 
         Gets the arp cache for the given computer(s).
@@ -20,7 +20,7 @@
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ArpCache
 
     .Notes 
-        Updated: 2017-10-16
+        Updated: 2017-10-19
 
         Contributing Authors:
             Jeremy Arnold
@@ -41,14 +41,14 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-    PARAM(
+    param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
     );
 
-	BEGIN{
+	begin{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
@@ -71,7 +71,7 @@
         };
 	};
 
-    PROCESS{
+    process{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
         
@@ -110,15 +110,15 @@
             };
 
             $total = $total+1;
-            Return $OutputArray;
+            return $OutputArray;
 
         }
         else {
             
-            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
-                $total = $total+1;
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
@@ -129,7 +129,7 @@
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
                 
-                $total = $total+1;
+                $total++;
                 return $output;
             };
         };

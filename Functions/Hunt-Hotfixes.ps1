@@ -98,29 +98,36 @@ FUNCTION Hunt-Hotfixes {
                 $output.UninstallationNotes = $_.UninstallationNotes;
                 $output.SupportUrl = $_.SupportUrl;
 
+                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)};
                 return $output;
-                $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
             };
         }
         else {
-
-            return $output;
-            $output.PsObject.Members | ForEach-Object {$output.PsObject.Members.Remove($_.Name)}; 
-        };
-
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total++;
             
-        Write-Verbose -Message "System $total `t $ThisComputer `t Time Elapsed: $elapsed";
+            Write-Verbose ("{0}: System failed." -f $Computer);
+            if ($Fails) {
+                
+                $total++;
+                Add-Content -Path $Fails -Value ("$Computer");
+            }
+            else {
+                
+                $output = $null;
+                $output = [ArpCache]::new();
 
+                $output.Computer = $Computer;
+                $output.DateScanned = Get-Date -Format u;
+                
+                $total++;
+                return $output;
+            };
+        };
     };
 
-    END{
+    end {
+
         $elapsed = $stopwatch.Elapsed;
-        Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
-	};
+
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };
-
-
-
-

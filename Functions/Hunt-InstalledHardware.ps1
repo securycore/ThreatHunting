@@ -100,36 +100,30 @@
         }
         else {
             
-            Write-Verbose "System unreachable.";
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
-                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
-                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [Device]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
+                
+                $total++;
                 return $output;
             };
         };
-        
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total + 1;
-        
-        Write-Verbose "System $total `t $ThisComputer `t Total Time Elapsed: $elapsed";
-
     };
 
-    END {
+    end {
 
         $elapsed = $stopwatch.Elapsed;
 
-        Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
     };
 };

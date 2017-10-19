@@ -118,33 +118,33 @@ FUNCTION Hunt-InterfaceDetails {
 
         Return $OutputArray;
             
-        }Else{ # System was not reachable
-
-            if ($Fails) { # -Fails switch was used
+        }
+        else {
+            
+            Write-Verbose ("{0}: System failed." -f $Computer);
+            if ($Fails) {
+                
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
-
-            else{ # -Fails switch not used
-                            
+            else {
+                
                 $output = $null;
-                $output = [Adapter]::new();
+                $output = [ArpCache]::new();
+
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
                 
-            return $output;
-
+                $total++;
+                return $output;
             };
-
         };
-
     };
 
-    END{
+    end {
+
         $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
 
-        Write-Information -MessageData "Total Systems: $total `t Total time elapsed: $elapsed" -InformationAction Continue;
-
-	};
-
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
+    };
 };

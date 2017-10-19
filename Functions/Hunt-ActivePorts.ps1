@@ -98,7 +98,7 @@
         
         if ($TCPConnections) {
 
-            Write-Verbose ("{0}: Parsing results." -f $Computer);            
+            Write-Verbose ("{0}: Parsing results." -f $Computer);
             $OutputArray = @();
           
             foreach ($TCPConnection in $TCPConnections) {
@@ -121,26 +121,26 @@
                 $OutputArray += $output;
             };
         
-        $total = $total+1;
-        return $OutputArray;
+            $total++;
+            return $OutputArray;
         }        
         else {
             
-            Write-Verbose ("{0}: System unreachable." -f $Computer);
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
-                $total = $total+1;
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
                 $output = $null;
-                $output = [TCPConnection]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
                 
-                $total = $total+1;
+                $total++;
                 return $output;
             };
         };

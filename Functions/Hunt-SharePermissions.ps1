@@ -149,27 +149,32 @@ FUNCTION Hunt-SharePermissions {
 
             Return $OutputArray;
         }
-
-        else { # System was not reachable
-
-            if ($Fails) { # -Fails switch was used
+        else {
+            
+            Write-Verbose ("{0}: System failed." -f $Computer);
+            if ($Fails) {
+                
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
-            else{ # -Fails switch not used
-                            
+            else {
+                
                 $output = $null;
-                $output = [SharePermission]::new();
+                $output = [ArpCache]::new();
+
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
+                
+                $total++;
                 return $output;
             };
         };
-         
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total+1;
-            
-        Write-Information -MessageData "System $total `t $ThisComputer `t Time Elapsed: $elapsed" -InformationAction Continue;
+    };
 
+    end {
+
+        $elapsed = $stopwatch.Elapsed;
+
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
     };
 };

@@ -96,7 +96,7 @@ function Hunt-ADS {
             $Path = $args[0];
 
             $Streams = Get-ChildItem -Path $Path -Recurse -PipelineVariable FullName | 
-            foreach { Get-Item $_.FullName -Stream * } | # Doesn't work without foreach
+            ForEach-Object { Get-Item $_.FullName -Stream * } | # Doesn't work without foreach
             Where-Object {($_.Stream -notlike "*DATA") -AND ($_.Stream -ne "Zone.Identifier")};
 
             ForEach ($Stream in $Streams) {
@@ -137,51 +137,38 @@ function Hunt-ADS {
                 $output.LastAccessTimeUtc = $Stream.LastAccessTimeUtc;
                 $output.LastWriteTimeUtc = $Stream.LastWriteTimeUtc;
                 
-                $total = $total + 1;
-
                 $OutputArray += $output;
             };
 
+            $total++;
             return $OutputArray;
         }
         else {
             
-            Write-Verbose "System unreachable.";
+            Write-Verbose ("{0}: System failed." -f $Computer);
             if ($Fails) {
                 
-                Write-Verbose "-Fails switch activated. Saving system to -Fails filepath.";
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
                 
-                Write-Verbose "Writing failed Computer and DateScanned.";        
                 $output = $null;
-                $output = [ADS]::new();
+                $output = [ArpCache]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
-
-                $total = $total + 1;
-
+                
+                $total++;
                 return $output;
             };
         };
-        
-        $elapsed = $stopwatch.Elapsed;
-        $total = $total + 1;
-        
-        Write-Verbose "System $total `t $ThisComputer `t Total Time Elapsed: $elapsed";
-
     };
 
     end {
 
         $elapsed = $stopwatch.Elapsed;
 
-        Write-Verbose "Total Systems: $total `t Total time elapsed: $elapsed";
+        Write-Verbose ("Total Systems: {0} `t Total time elapsed: {1}" -f $total, $elapsed);
     };
 };
-
-
-
-
