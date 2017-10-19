@@ -13,11 +13,11 @@ function Hunt-HostsEntries {
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-ArpCache 
-        Hunt-ArpCache  SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-ArpCache
-        Hunt-ArpCache -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ArpCache
+        Hunt-HostsEntries 
+        Hunt-HostsEntries  SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-HostsEntries
+        Hunt-HostsEntries -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-HostsEntries
 
     .Notes 
         Updated: 2017-10-19
@@ -113,7 +113,6 @@ function Hunt-HostsEntries {
                 $output.HostsName = $hostname;
                 $output.HostsComment = $comment;
 
-                
                 $OutputArray += $output;
             }
 
@@ -131,7 +130,7 @@ function Hunt-HostsEntries {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Entry]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
