@@ -84,6 +84,8 @@ function Hunt-HostsEntries {
 
         if ($HostsData){
 
+            $OutputArray = @();
+
             Write-Verbose ("{0}: Parsing results." -f $Computer);
             $HostsData | ForEach-Object {
 
@@ -111,16 +113,19 @@ function Hunt-HostsEntries {
                 $output.HostsName = $hostname;
                 $output.HostsComment = $comment;
 
-                $total = $total+1;
-                return $output;
+                
+                $OutputArray += $output;
             }
+
+            $total++;
+            return $OutputArray;
         }
         else {
             
             Write-Verbose ("{0}: System unreachable." -f $Computer);
             if ($Fails) {
                 
-                $total = $total+1;
+                $total++;
                 Add-Content -Path $Fails -Value ("$Computer");
             }
             else {
@@ -131,7 +136,7 @@ function Hunt-HostsEntries {
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
                 
-                $total = $total+1;
+                $total++;
                 return $output;
             };
         };
