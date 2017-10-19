@@ -20,7 +20,7 @@ function Hunt-HostsEntries {
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ArpCache
 
     .Notes 
-        Updated: 2017-10-17
+        Updated: 2017-10-19
 
         Contributing Authors:
             Anthony Phipps
