@@ -41,6 +41,7 @@ function Hunt-TPM {
         
     .LINK
         https://trustedcomputinggroup.org/vendor-id-registry/
+        https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV170012
     #>
 
     param(
@@ -102,6 +103,7 @@ function Hunt-TPM {
             [String] $LockoutCount
             [String] $LockoutMax
             [String] $SelfTest
+            [String] $FirmwareVersionAtLastProvision
         };
 	};
 
@@ -110,7 +112,14 @@ function Hunt-TPM {
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
 
         $TPMInfo = $null;
-        $TPMInfo = Invoke-Command -ComputerName $Computer -ScriptBlock { Get-Tpm; };
+        $TPMInfo = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock { 
+            $TPM = Get-Tpm  -ErrorAction SilentlyContinue;
+            $FirmwareVersionAtLastProvision = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\TPM\WMI" -Name "FirmwareVersionAtLastProvision" -ErrorAction SilentlyContinue).FirmwareVersionAtLastProvision;
+            
+            $TPM | Add-Member -MemberType NoteProperty -Name "FirmwareVersionAtLastProvision" -Value $FirmwareVersionAtLastProvision;
+
+            return $TPM;
+        };
 
         if ($TPMInfo) {
                         
@@ -133,6 +142,7 @@ function Hunt-TPM {
             $output.LockoutMax = $TPMInfo.LockoutMax;
             $output.SelfTest = $TPMInfo.SelfTest;
             $output.ManufacturerIdHex = "0x{0:x}" -f $TPMInfo.ManufacturerId;
+            $output.FirmwareVersionAtLastProvision = $TPMInfo.FirmwareVersionAtLastProvision;
 
             # Convert ManufacturerId to ManufacturerName
             foreach ($Key in $Manufacturers.Keys) {
