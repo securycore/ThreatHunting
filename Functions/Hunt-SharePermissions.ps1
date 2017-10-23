@@ -1,4 +1,4 @@
-FUNCTION Hunt-SharePermissions {
+function Hunt-SharePermissions {
     <#
     .Synopsis 
         Gets the shares configured on a given system.
@@ -40,14 +40,14 @@ FUNCTION Hunt-SharePermissions {
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
     #>
 
-    PARAM(
+    param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
         [Parameter()]
         $Fails
     );
 
-	BEGIN{
+	begin{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Information -MessageData "Started at $datetime" -InformationAction Continue;
@@ -84,7 +84,7 @@ FUNCTION Hunt-SharePermissions {
         };
 	};
 
-    PROCESS{
+    process{
 
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
 
@@ -147,7 +147,7 @@ FUNCTION Hunt-SharePermissions {
                 };
             };
 
-            Return $OutputArray;
+            return $OutputArray;
         }
         else {
             
@@ -160,7 +160,7 @@ FUNCTION Hunt-SharePermissions {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [SharePermission]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
