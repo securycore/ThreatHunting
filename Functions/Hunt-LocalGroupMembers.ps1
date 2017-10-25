@@ -81,6 +81,8 @@ function Hunt-LocalGroupMembers {
 
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
 
+        Write-Verbose ("{0}: Querying remote system" -f $Computer); 
+        
         $groupMembers = $null;
         $groupMembers = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock { 
             
@@ -133,6 +135,7 @@ function Hunt-LocalGroupMembers {
                 $outputArray += $output;
             };
 
+            $total++;
             return $outputArray;
         }
         else {

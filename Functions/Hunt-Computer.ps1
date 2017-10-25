@@ -231,7 +231,8 @@ Function Hunt-Computer {
             $output.SerialNumber = $Win32_BIOS.SerialNumber;
             $output.SystemBiosMajorVersion = $Win32_BIOS.SystemBiosMajorVersion;
             $output.SystemBiosMinorVersion = $Win32_BIOS.SystemBiosMinorVersion;
-                            
+
+            $total++;
             return $output; 
         }
         else {

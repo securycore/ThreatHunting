@@ -1,4 +1,4 @@
-﻿function Hunt-AutoRuns {
+﻿function Hunt-Autoruns {
     <#
     .Synopsis 
         Gets a list of programs that auto start for the given computer(s).
@@ -13,17 +13,18 @@
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-AutoRuns 
-        Hunt-AutoRuns SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-AutoRuns
-        Hunt-AutoRuns -Computer $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-AutoRuns
+        Hunt-Autoruns 
+        Hunt-Autoruns SomeHostName.domain.com
+        Get-Content C:\hosts.csv | Hunt-Autoruns
+        Hunt-Autoruns -Computer $env:computername
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Autoruns
 
     .Notes
-        Updated: 2017-10-19
+        Updated: 2017-10-24
 
         Contributing Authors:
             Jeremy Arnold
+            Anthony Phipps
             
         LEGAL: Copyright (C) 2017
         This program is free software: you can redistribute it and/or modify
@@ -38,6 +39,9 @@
 
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+        .LINK
+        https://github.com/DLACERT/ThreatHunting
     #>
 
     param(
@@ -56,14 +60,14 @@
         $stopwatch.Start();
         $total = 0;
 
-        class AutoRuns
+        class Autorun
         {
             [Datetime] $DateScanned
             [string] $Computer
             [String] $User
             [string] $Caption
             [string] $Command
-            [String] $RegistryLocation
+            [String] $Location
                         
         };
 
@@ -72,30 +76,36 @@
     process{
             
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $OutputArray = @();
-        $autoRun = $null;
-        Write-Verbose "Getting a list of AutoRuns..."
-        $autoRun = Invoke-Command -Computer $Computer -ScriptBlock {Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue};
+        
+        Write-Verbose ("{0}: Querying remote system" -f $Computer); 
+        $autoruns = $null;
+        $autoruns = Invoke-Command -Computer $Computer -ErrorAction SilentlyContinue -ScriptBlock {
+            Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue;
+        };
        
-        if ($autoRun) { 
-            foreach ($entry in $autoRun) {
+        if ($autoruns) { 
+            
+            $outputArray = @();
+
+            foreach ($autorun in $autoruns) {
              
                 $output = $null;
-                $output = [AutoRuns]::new();
+                $output = [Autorun]::new();
                 
-                $output.DateScanned = Get-Date -Format u;
                 $output.Computer = $Computer;
-                $output.User = $entry.user;
-                $output.caption = $entry.caption;
-                $output.command = $entry.command;
-                $output.RegistryLocation = $entry.location;
+                $output.DateScanned = Get-Date -Format u;
+                
+                $output.User = $autorun.User;
+                $output.Caption = $autorun.Caption;
+                $output.Command = $autorun.Command;
+                $output.Location = $autorun.Location;
 
-                $OutputArray += $output;
+                $outputArray += $output;
             
             };
 
             $total++;
-            Return $OutputArray;
+            return $OutputArray;
         
         }
         else {
@@ -109,7 +119,7 @@
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Autorun]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
