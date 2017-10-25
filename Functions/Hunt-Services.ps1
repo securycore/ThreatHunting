@@ -1,4 +1,4 @@
-FUNCTION Hunt-Services {
+function Hunt-Services {
 <#
 .Synopsis 
     Queries the services on a given hostname, FQDN, or IP address.
@@ -17,7 +17,7 @@ FUNCTION Hunt-Services {
     Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-Services
 
 .Notes 
-    Updated: 2017-10-10
+    Updated: 2017-10-25
 
         Contributing Authors:
             Anthony Phipps
@@ -35,14 +35,17 @@ FUNCTION Hunt-Services {
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    .LINK
+        https://github.com/DLACERT/ThreatHunting
 #>
 
-    PARAM(
+    param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME
     );
 
-	BEGIN{
+	begin{
 
         $datetime = Get-Date -Format "yyyy-MM-dd_hh.mm.ss.ff";
         Write-Verbose "Started at $datetime"
@@ -83,10 +86,11 @@ FUNCTION Hunt-Services {
 		};
 	};
 
-    PROCESS{        
+    process{        
                 
         $Computer = $Computer.Replace('"', '');
 
+        Write-Verbose ("{0}: Querying remote system" -f $Computer); 
         $Services = Get-CIMinstance -class Win32_Service -Filter "Caption LIKE '%'" -ComputerName $Computer -ErrorAction SilentlyContinue;
         # Odd filter explanation: http://itknowledgeexchange.techtarget.com/powershell/cim-session-oddity/
 
@@ -128,6 +132,7 @@ FUNCTION Hunt-Services {
                 $output.TotalSessions = $_.TotalSessions;
                 $output.WaitHint = $_.WaitHint;
                     
+                $total++;
                 return $output; 
             };
         }
@@ -142,7 +147,7 @@ FUNCTION Hunt-Services {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Service]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
