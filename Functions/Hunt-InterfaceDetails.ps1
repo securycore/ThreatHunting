@@ -20,7 +20,7 @@ FUNCTION Hunt-InterfaceDetails {
         Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-InterfaceDetails
 
     .Notes 
-        Updated: 2017-10-10
+        Updated: 2017-10-26
 
         Contributing Authors:
             Jeremy Arnold
@@ -63,7 +63,7 @@ FUNCTION Hunt-InterfaceDetails {
             [String] $FQDN
             [String] $Description
             [String] $NetConnectionID
-            [String] $NetEnabled
+            [String] $NetConnected
             [String] $InterfaceIndex
             [String] $Speed
             [String] $MACAddress
@@ -72,14 +72,15 @@ FUNCTION Hunt-InterfaceDetails {
             [String] $Gateway
             [String] $DNS
             [String] $MTU
+            [bool] $PromiscuousMode
         };
         
 	};
 
     PROCESS{
             
-        $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
-        $Adapters = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-CimInstance Win32_NetworkAdapter | Select-Object * -ErrorAction SilentlyContinue}; #get a list of network adapters
+        $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present get-netadapter
+        $Adapters = Invoke-Command -ComputerName $Computer -ScriptBlock {Get-NetAdapter -ErrorAction SilentlyContinue}; #get a list of network adapters
         
         if ($Adapters) {
 
@@ -89,7 +90,7 @@ FUNCTION Hunt-InterfaceDetails {
 
             foreach ($Adapter in $Adapters) {#loop through the Interfaces and build the outputArray
                 
-                if ($Adapter.NetEnabled) {
+                if ($Adapter.MediaConnectionState -eq "Connected") {
 
                     $AdapterConfig = $AdapterConfigs | Where {$_.InterfaceIndex -eq $Adapter.InterfaceIndex};
                     $output = $null;
@@ -98,18 +99,19 @@ FUNCTION Hunt-InterfaceDetails {
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
                     $output.FQDN = $Adapter.SystemName;
-                    $output.Description = $Adapter.Description;
-                    $output.NetConnectionID = $Adapter.NetConnectionID;
-                    $output.NetEnabled = $Adapter.NetEnabled;
-                    $output.InterfaceIndex = $Adapter.InterfaceIndex;
+                    $output.Description = $Adapter.InterfaceDescription;
+                    $output.NetConnectionID = $Adapter.Name;
+                    $output.NetConnected= $Adapter.MediaConnectionState;
+                    $output.InterfaceIndex = $Adapter.ifIndex;
                     $output.Speed = $Adapter.Speed;
                     $output.MACAddress = $Adapter.MACAddress;
                     $output.IPAddress = $AdapterConfig.ipaddress[0];
                     $output.Subnet = $AdapterConfig.IPsubnet[0];
                     $output.Gateway = $AdapterConfig.DefaultIPGateway;
                     $output.DNS = $AdapterConfig.DNSServerSearchOrder;
-                    $output.MTU = $AdapterConfig.MTU;
- 
+                    $output.MTU = $Adapter.MtuSize;
+                    $output.PromiscuousMode = $Adapter.PromiscuousMode;
+
                     $OutputArray += $output;
 
                 };
