@@ -60,6 +60,13 @@
 
         $total = 0;
 
+        Enum RouteType
+        {
+            AdminDefinedRoute = 2
+            ComputedRoute = 3
+            ActualRoute = 4        
+        }
+
         class RouteTable
         {
             [String] $Computer
@@ -73,7 +80,7 @@
             [String] $Protocol
             [String] $Store
             [String] $PublishedRoute
-            [String] $TypeOfRoute
+            [RouteType] $TypeOfRoute
         };
 	};
 
@@ -82,7 +89,7 @@
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
 
         $routes = $null;
-        $routes = Invoke-Command -ErrorAction SilentlyContinue -ScriptBlock { 
+        $routes = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock { 
             
             $interfaces = $null;
             $interfaces = Get-NetAdapter | Where-Object {$_.MediaConnectionState -eq "Connected"};
