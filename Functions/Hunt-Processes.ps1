@@ -236,7 +236,7 @@ Function Hunt-Processes {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Process]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

@@ -114,7 +114,7 @@ FUNCTION Hunt-Drivers {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Driver]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

@@ -154,7 +154,7 @@ function Hunt-ADS {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [ADS]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

@@ -246,7 +246,7 @@ Function Hunt-Computer {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Computer]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

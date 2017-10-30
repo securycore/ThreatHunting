@@ -135,7 +135,7 @@ FUNCTION Hunt-ScheduledTasks {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Task]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

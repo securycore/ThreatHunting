@@ -114,7 +114,7 @@ Function Hunt-EnvironmentVariables {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [EnvVariable]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

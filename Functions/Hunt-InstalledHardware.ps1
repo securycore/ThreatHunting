@@ -109,7 +109,7 @@
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Device]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

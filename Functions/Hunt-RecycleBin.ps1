@@ -134,7 +134,7 @@ function Hunt-RecycleBin {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [DeletedItem]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

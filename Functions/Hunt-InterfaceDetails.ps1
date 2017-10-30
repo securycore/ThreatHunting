@@ -130,7 +130,7 @@ FUNCTION Hunt-InterfaceDetails {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [Adapter]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

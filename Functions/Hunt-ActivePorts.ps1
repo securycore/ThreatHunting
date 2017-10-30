@@ -135,7 +135,7 @@
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [TCPConnection]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

@@ -98,10 +98,10 @@ FUNCTION Hunt-WinEvents {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
-
-                $output.Computer = $Computer;
-                $output.DateScanned = Get-Date -Format u;
+                $output = [PSCustomObject]@{
+                    Computer = $Computer
+                    DateScanned = Get-Date -Format u
+                };
                 
                 $total++;
                 return $output;

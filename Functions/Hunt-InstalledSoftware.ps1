@@ -106,7 +106,7 @@
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [InstalledSoftware]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;

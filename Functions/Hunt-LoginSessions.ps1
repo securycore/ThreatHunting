@@ -128,7 +128,7 @@ function Hunt-LoginSessions {
             else {
                 
                 $output = $null;
-                $output = [ArpCache]::new();
+                $output = [LoginSession]::new();
 
                 $output.Computer = $Computer;
                 $output.DateScanned = Get-Date -Format u;
