@@ -9,18 +9,22 @@
     .Parameter Computer  
         Computer can be a single hostname, FQDN, or IP address.
 
+    .Parameter ToolLocation
+        The location of Sysinternals Handle.exe/Handle64.exe. This parameter is manadatory
+        and is how the function gets the list of handles.
+
     .Parameter Fails  
         Provide a path to save failed systems to.
 
     .Example 
-        Hunt-ProcessHandles 
-        Hunt-ProcessHandles SomeHostName.domain.com
-        Get-Content C:\hosts.csv | Hunt-ProcessHandles
-        Hunt-ProcessHandles $env:computername
-        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ProcessHandles
+        Hunt-ProcessHandles -Toollocation c:\tools\sysinternals
+        Hunt-ProcessHandles SomeHostName.domain.com -Toollocation c:\tools\sysinternals
+        Get-Content C:\hosts.csv | Hunt-ProcessHandles -Toollocation c:\tools\sysinternals
+        Hunt-ProcessHandles $env:computername -Toollocation c:\tools\sysinternals
+        Get-ADComputer -filter * | Select -ExpandProperty Name | Hunt-ProcessHandles -Toollocation c:\tools\sysinternals
 
     .Notes 
-        Updated: 2017-11-4
+        Updated: 2017-11-10
 
         Contributing Authors:
             Jeremy Arnold
@@ -46,6 +50,8 @@
     param(
     	[Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
         $Computer = $env:COMPUTERNAME,
+        [Parameter(mandatory=$true)]
+        $ToolLocation,
         [Parameter()]
         $Fails
     );
@@ -67,44 +73,73 @@
 
             [string] $ProcessID
             [string] $Process
-
+            [string] $Owner
+            [string] $Location
+            [string] $HandleType
+            [string] $Attributes
+            [string] $String
         };
 	};
 
     process{
 
         $Computer = $Computer.Replace('"', '');  # get rid of quotes, if present
+        $remoteOS64 = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock {
+
+            $remoteOS64 = [environment]::Is64BitOperatingSystem;
+        
+            return $remoteOS64;
+        };
+      
+        if ($remoteOS64){$tool = 'handle64.exe'} else {'handle.exe'};
+        
+        Write-Verbose ("{0}: Copying {1} to {0}." -f $Computer, $tool);
+        
+        try{Copy-Item -Path $($ToolLocation+'\'+$tool) -Destination $('\\'+$Computer+'\c$\temp\'+$tool); 
+        }catch{$Error[0]};
 
         $handles = $null;
         $handles = Invoke-Command -ComputerName $Computer -ErrorAction SilentlyContinue -ScriptBlock { 
             
-            $handles = 'Looking to use Sysinternals handles.exe / handles64.exe for this task' ;
+            $handles = Invoke-Expression "C:\temp\$tool -a -nobanner -accepteula";
 
             return $handles;
         
         };
             
         if ($handles) {
-            
+            [regex]$regexProcess = '(?<process>\S+)\spid:\s(?<pid>\d+)\s(?<string>.*)'
+            [regex]$regexHandle = '(?<location>[A-F0-9]+):\s(?<type>\w+)\s{2}(?<attributes>\(.*\))?\s+(?<string>.*)'
+            [regex]$nullHandle = '([A-F0-9]+):\s(\w+)\s+$'
             $outputArray = @();
-
+            $handles = $handles | Where-Object {($_.length -gt 0) -and ($_ -notmatch $nullHandle)}
             Foreach ($handle in $handles) {
-                
-                    
+                if ($handle -match $regexProcess){
+                    $process = $Matches.process;
+                    $processPID = $Matches.pid;
+                    $owner = $Matches.string;
+                }
+                if ($handle -match $regexHandle){
                     $output = $null;
                     $output = [Handles]::new();
     
                     $output.Computer = $Computer;
                     $output.DateScanned = Get-Date -Format u;
     
-                    $output.ProcessID = '';
-                    $output.Process = '';
+                    $output.ProcessID = $processPID;
+                    $output.Process = $process;
+                    $output.Owner =$owner;
+                    $output.Location = $Matches.location;
+                    $output.HandleType = $Matches.type;
+                    $output.Attributes = $Matches.attributes;
+                    $output.String = $Matches.string;
                                         
                     $outputArray += $output;
+                }
 
             };
-
-            return $outputArray;
+            Remove-Item -Path $('\\'+$Computer+'\c$\temp\'+$tool);
+            return $outputArray[0..8000];
 
         }
         else {
