@@ -91,7 +91,7 @@
             return $remoteOS64;
         };
       
-        if ($remoteOS64){$tool = 'handle64.exe'} else {'handle.exe'};
+        if ($remoteOS64){$tool = 'handle64.exe'} else {$tool = 'handle.exe'};
         
         Write-Verbose ("{0}: Copying {1} to {0}." -f $Computer, $tool);
         
@@ -139,7 +139,7 @@
 
             };
             Remove-Item -Path $('\\'+$Computer+'\c$\temp\'+$tool);
-            return $outputArray[0..8000];
+            return $outputArray[0..12000];#select first 12000
 
         }
         else {
