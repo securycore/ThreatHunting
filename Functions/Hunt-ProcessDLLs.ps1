@@ -103,8 +103,8 @@
     
                     $output.ProcessID = $process.id;
                     $output.Process = $process.processname;
-                    $output.Company = $module.company;
-                    $output.Product = $module.Product;
+                    $output.DLLCompany = $module.company;
+                    $output.DLLProduct = $module.Product;
                     $output.DLLName = $module.modulename;
                     
                     $outputArray += $output;
