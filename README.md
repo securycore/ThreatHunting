@@ -21,3 +21,5 @@ To only use the scripts during the current powershell session, use
 CERTAnalysisMitigation@dla.mil
 
 CERT@dla.mil
+
+http://seclist.us/threathunting-powershell-collection-designed-to-assist-in-threat-hunting-windows-systems.html
